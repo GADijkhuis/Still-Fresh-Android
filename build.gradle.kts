@@ -1,37 +1,52 @@
 plugins {
-    kotlin("jvm") version "1.9.22"
-    kotlin("plugin.serialization") version "1.9.22"
-    application
+    id("com.android.application") version "8.2.2"
+    kotlin("android") version "2.1.10"
+    kotlin("plugin.serialization") version "2.1.10"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.1.10"
 }
 
-group = "com.stillfresh"
-version = "1.0-SNAPSHOT"
+android {
+    namespace = "com.stillfresh"
+    compileSdk = 34
 
-repositories {
-    mavenCentral()
+    defaultConfig {
+        applicationId = "com.stillfresh"
+        minSdk = 26
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0"
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
+
+    kotlinOptions {
+        jvmTarget = "21"
+    }
+
+    buildFeatures {
+        compose = true
+    }
 }
 
 dependencies {
-    implementation(platform("io.github.jan-tennert.supabase:bom:2.2.3"))
+    implementation(platform("io.github.jan-tennert.supabase:bom:3.1.1"))
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.github.jan-tennert.supabase:auth-kt")
     implementation("io.github.jan-tennert.supabase:realtime-kt")
 
-    implementation("io.ktor:ktor-client-cio:2.3.8")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    implementation("io.ktor:ktor-client-android:3.0.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 
-    testImplementation(kotlin("test"))
-}
+    implementation(platform("androidx.compose:compose-bom:2024.02.02"))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.activity:activity-compose:1.9.3")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
 
-application {
-    mainClass.set("com.stillfresh.MainKt")
-}
-
-tasks.test {
-    useJUnitPlatform()
-}
-
-kotlin {
-    jvmToolchain(17)
+    debugImplementation("androidx.compose.ui:ui-tooling")
 }
