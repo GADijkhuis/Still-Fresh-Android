@@ -8,18 +8,13 @@ import io.github.jan.supabase.realtime.Realtime
 
 object SupabaseConfig {
 
-    private val supabaseUrl: String
-        get() = System.getenv("SUPABASE_URL")
-            ?: error("SUPABASE_URL environment variable is not set")
-
-    private val supabaseKey: String
-        get() = System.getenv("SUPABASE_KEY")
-            ?: error("SUPABASE_KEY environment variable is not set")
+    private const val SUPABASE_URL = "YOUR_SUPABASE_URL"
+    private const val SUPABASE_KEY = "YOUR_SUPABASE_KEY"
 
     val client: SupabaseClient by lazy {
         createSupabaseClient(
-            supabaseUrl = supabaseUrl,
-            supabaseKey = supabaseKey
+            supabaseUrl = SUPABASE_URL,
+            supabaseKey = SUPABASE_KEY
         ) {
             install(Auth)
             install(Postgrest)
