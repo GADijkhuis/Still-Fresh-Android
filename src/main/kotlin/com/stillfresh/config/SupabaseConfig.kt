@@ -1,4 +1,4 @@
-package com.gadijkh.config
+package com.stillfresh.config
 
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.createSupabaseClient

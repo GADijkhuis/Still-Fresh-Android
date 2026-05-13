@@ -1,4 +1,4 @@
-package com.gadijkh
+package com.stillfresh
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -10,7 +10,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.gadijkh.ui.theme.StillFreshTheme
+import com.stillfresh.ui.theme.StillFreshTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -1,18 +1,18 @@
 plugins {
-    id("com.android.application") version "8.2.2"
-    kotlin("android") version "2.1.10"
+    id("com.android.application") version "9.2.1"
+    kotlin("android") version "2.2.10"
     kotlin("plugin.serialization") version "2.1.10"
-    id("org.jetbrains.kotlin.plugin.compose") version "2.1.10"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.2.10"
 }
 
 android {
-    namespace = "com.gadijkh"
-    compileSdk = 34
+    namespace = "com.stillfresh"
+    compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.stillfresh"
+        applicationId = "com.gadijkh.stillfresh"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
     }
