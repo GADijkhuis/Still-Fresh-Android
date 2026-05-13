@@ -12,7 +12,7 @@ object SupabaseConfig {
     private const val SUPABASE_URL = BuildConfig.SUPABASE_URL
     private const val SUPABASE_KEY = BuildConfig.SUPABASE_API_KEY
 
-    val client: SupabaseClient by lazy {
+    public val client: SupabaseClient by lazy {
         createSupabaseClient(
             supabaseUrl = SUPABASE_URL,
             supabaseKey = SUPABASE_KEY
