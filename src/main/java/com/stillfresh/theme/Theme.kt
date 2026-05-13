@@ -1,4 +1,4 @@
-package com.stillfresh.ui.theme
+package com.stillfresh.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.dynamicLightColorScheme
