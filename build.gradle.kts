@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.stillfresh"
+    namespace = "com.gadijkh"
     compileSdk = 34
 
     defaultConfig {
