@@ -1,18 +1,18 @@
 plugins {
-    id("com.android.application") version "8.2.2"
+    id("com.android.application") version "8.13.2"
     kotlin("android") version "2.1.10"
     kotlin("plugin.serialization") version "2.1.10"
     id("org.jetbrains.kotlin.plugin.compose") version "2.1.10"
 }
 
 android {
-    namespace = "com.gadijkh"
-    compileSdk = 34
+    namespace = "com.stillfresh"
+    compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.stillfresh"
+        applicationId = "com.gadijkh.stillfresh"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
     }
@@ -33,6 +33,10 @@ android {
 
 dependencies {
     implementation(platform("io.github.jan-tennert.supabase:bom:3.1.1"))
+    implementation("androidx.activity:activity-ktx:1.13.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation("com.google.android.material:material:1.10.0")
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.github.jan-tennert.supabase:auth-kt")
     implementation("io.github.jan-tennert.supabase:realtime-kt")
