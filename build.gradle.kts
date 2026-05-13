@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application") version "9.2.1"
     kotlin("android") version "2.2.10"
@@ -8,6 +10,7 @@ plugins {
 android {
     namespace = "com.stillfresh"
     compileSdk = 36
+    buildFeatures.buildConfig = true
 
     defaultConfig {
         applicationId = "com.gadijkh.stillfresh"
@@ -15,6 +18,22 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+
+        val properties = Properties()
+        properties.load(project.rootProject.file("local.properties").inputStream())
+
+        buildConfigField(
+            type = "String",
+            name = "SUPABASE_URL",
+            value = properties.getProperty("SUPABASE_URL") ?: ""
+        )
+
+        buildConfigField(
+            type = "String",
+            name = "SUPABASE_API_KEY",
+            value = properties.getProperty("SUPABASE_API_KEY") ?: ""
+        )
+
     }
 
     compileOptions {
