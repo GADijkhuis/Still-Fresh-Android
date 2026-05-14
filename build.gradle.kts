@@ -1,20 +1,39 @@
+import java.util.Properties
+
 plugins {
-    id("com.android.application") version "8.2.2"
-    kotlin("android") version "2.1.10"
+    id("com.android.application") version "9.2.1"
+    kotlin("android") version "2.2.10"
     kotlin("plugin.serialization") version "2.1.10"
-    id("org.jetbrains.kotlin.plugin.compose") version "2.1.10"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.2.10"
 }
 
 android {
-    namespace = "com.gadijkh"
-    compileSdk = 34
+    namespace = "com.stillfresh"
+    compileSdk = 36
+    buildFeatures.buildConfig = true
 
     defaultConfig {
-        applicationId = "com.stillfresh"
+        applicationId = "com.gadijkh.stillfresh"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+
+        val properties = Properties()
+        properties.load(project.rootProject.file("local.properties").inputStream())
+
+        buildConfigField(
+            type = "String",
+            name = "SUPABASE_URL",
+            value = properties.getProperty("SUPABASE_URL") ?: ""
+        )
+
+        buildConfigField(
+            type = "String",
+            name = "SUPABASE_API_KEY",
+            value = properties.getProperty("SUPABASE_API_KEY") ?: ""
+        )
+
     }
 
     compileOptions {
@@ -32,7 +51,11 @@ android {
 }
 
 dependencies {
-    implementation(platform("io.github.jan-tennert.supabase:bom:3.1.1"))
+    implementation(platform("io.github.jan-tennert.supabase:bom:3.6.0"))
+    implementation("androidx.activity:activity-ktx:1.13.0")
+    implementation("androidx.appcompat:appcompat:1.7.1")
+    implementation("androidx.constraintlayout:constraintlayout:2.2.1")
+    implementation("com.google.android.material:material:1.13.0")
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.github.jan-tennert.supabase:auth-kt")
     implementation("io.github.jan-tennert.supabase:realtime-kt")
