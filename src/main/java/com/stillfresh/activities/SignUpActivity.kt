@@ -1,6 +1,5 @@
 package com.stillfresh.activities
 
-import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -30,12 +29,11 @@ import androidx.lifecycle.lifecycleScope
 import com.stillfresh.auth.AuthRepository
 import com.stillfresh.components.AppLogo
 import com.stillfresh.components.StillFreshButton
-import com.stillfresh.components.StillFreshOutlinedButton
 import com.stillfresh.components.StillFreshTextField
 import com.stillfresh.theme.StillFreshTheme
 import kotlinx.coroutines.launch
 
-class MainActivity : ComponentActivity() {
+class SignUpActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -43,28 +41,25 @@ class MainActivity : ComponentActivity() {
             StillFreshTheme {
                 var isLoading by remember { mutableStateOf(false) }
 
-                LoginScreen(
+                SignUpScreen(
                     isLoading = isLoading,
-                    onLogin = { email, password ->
+                    onSignUp = { username, email, password ->
                         isLoading = true
                         lifecycleScope.launch {
-                            val result = AuthRepository.login(email, password)
+                            val result = AuthRepository.signUp(username, email, password)
                             isLoading = false
                             result.fold(
                                 onSuccess = {
-                                    Toast.makeText(this@MainActivity, "Login successful!", Toast.LENGTH_SHORT).show()
-                                    startActivity(Intent(this@MainActivity, HomeActivity::class.java))
+                                    Toast.makeText(this@SignUpActivity, "Account created! Check your email to confirm.", Toast.LENGTH_LONG).show()
                                     finish()
                                 },
                                 onFailure = { error ->
-                                    Toast.makeText(this@MainActivity, error.message ?: "Login failed", Toast.LENGTH_LONG).show()
+                                    Toast.makeText(this@SignUpActivity, error.message ?: "Sign up failed", Toast.LENGTH_LONG).show()
                                 }
                             )
                         }
                     },
-                    onSignUp = {
-                        startActivity(Intent(this@MainActivity, SignUpActivity::class.java))
-                    }
+                    onBackToLogin = { finish() }
                 )
             }
         }
@@ -72,11 +67,12 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun LoginScreen(
+fun SignUpScreen(
     isLoading: Boolean = false,
-    onLogin: (email: String, password: String) -> Unit,
-    onSignUp: () -> Unit
+    onSignUp: (username: String, email: String, password: String) -> Unit,
+    onBackToLogin: () -> Unit
 ) {
+    var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -99,13 +95,13 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(60.dp))
 
             // Logo
-            AppLogo(size = 120.dp)
+            AppLogo(size = 100.dp)
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // App name
+            // Title
             Text(
-                text = "Still Fresh",
+                text = "Create Account",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
@@ -113,16 +109,26 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Tagline
+            // Subtitle
             Text(
-                text = "Your groceries called—\nthey want to stay fresh.",
+                text = "Join Still Fresh and keep\nyour groceries on track.",
                 fontSize = 16.sp,
                 color = Color.White.copy(alpha = 0.9f),
                 textAlign = TextAlign.Center,
                 lineHeight = 22.sp
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(40.dp))
+
+            // Username field
+            StillFreshTextField(
+                value = username,
+                onValueChange = { username = it },
+                label = "Username",
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Email field
             StillFreshTextField(
@@ -154,46 +160,26 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Login button
+            // Sign up button
             StillFreshButton(
-                text = if (isLoading) "Logging in..." else "Log in",
-                onClick = { onLogin(email, password) },
-                enabled = email.isNotBlank() && password.isNotBlank() && !isLoading,
+                text = if (isLoading) "Creating account..." else "Sign Up",
+                onClick = { onSignUp(username, email, password) },
+                enabled = username.isNotBlank() && email.isNotBlank() && password.isNotBlank() && !isLoading,
                 containerColor = Color.White,
                 contentColor = tealBackground
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Divider with "or"
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                HorizontalDivider(
-                    modifier = Modifier.weight(1f),
-                    color = Color.White.copy(alpha = 0.5f)
-                )
+            // Back to login
+            TextButton(onClick = onBackToLogin) {
                 Text(
-                    text = "  or  ",
-                    color = Color.White.copy(alpha = 0.8f),
-                    fontSize = 14.sp
-                )
-                HorizontalDivider(
-                    modifier = Modifier.weight(1f),
-                    color = Color.White.copy(alpha = 0.5f)
+                    text = "Already have an account? Log in",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium
                 )
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Sign up button
-            StillFreshOutlinedButton(
-                text = "Create New Account",
-                onClick = onSignUp,
-                borderColor = Color.White,
-                contentColor = Color.White
-            )
 
             Spacer(modifier = Modifier.height(32.dp))
         }
