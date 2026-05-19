@@ -1,12 +1,15 @@
-package com.stillfresh.dataclasses
+package com.stillfresh.dataclasses.openfoodfacts
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class OpenFoodFactsProduct(
-    val productType: String?,
-    val productName: String?,
-    val brands: String?,
-    val packagings: OpenFoodFactsPackaging?,
-    val imageUrl: String?,
-    val ingredients: Array<OpenFoodFactsIngredients>?
+    val productType: String? = null,
+    val productName: String? = null,
+    val brands: String? = null,
+    val packagings: Array<OpenFoodFactsPackaging>? = null,
+    val imageUrl: String? = null,
+    val ingredients: Array<OpenFoodFactsIngredients>? = null
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
