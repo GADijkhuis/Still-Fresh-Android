@@ -34,6 +34,30 @@ android {
             value = properties.getProperty("SUPABASE_API_KEY") ?: ""
         )
 
+        buildConfigField(
+            type = "String",
+            name = "OPENFOODFACTS_API_URL",
+            value = properties.getProperty("OPENFOODFACTS_API_URL") ?: ""
+        )
+
+        buildConfigField(
+            type = "String",
+            name = "OPENFOODFACTS_API_USER",
+            value = properties.getProperty("OPENFOODFACTS_API_USER") ?: ""
+        )
+
+        buildConfigField(
+            type = "String",
+            name = "OPENFOODFACTS_API_PASS",
+            value = properties.getProperty("OPENFOODFACTS_API_PASS") ?: ""
+        )
+
+        buildConfigField(
+            type = "String",
+            name = "OPENFOODFACTS_API_MAIL",
+            value = properties.getProperty("OPENFOODFACTS_API_MAIL") ?: ""
+        )
+
     }
 
     compileOptions {
@@ -55,12 +79,13 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.13.0")
     implementation("androidx.appcompat:appcompat:1.7.1")
     implementation("androidx.constraintlayout:constraintlayout:2.2.1")
-    implementation("com.google.android.material:material:1.13.0")
+    implementation("com.google.android.material:material:1.14.0")
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.github.jan-tennert.supabase:auth-kt")
     implementation("io.github.jan-tennert.supabase:realtime-kt")
 
-    implementation("io.ktor:ktor-client-android:3.0.3")
+    implementation("io.ktor:ktor-client-android:3.5.0")
+    implementation("io.ktor:ktor-client-auth:3.5.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 
