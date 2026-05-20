@@ -105,7 +105,7 @@ fun LoginScreen(
 
             // App name
             Text(
-                text = "Still Fresh",
+                text = "StillFresh?",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
@@ -115,7 +115,7 @@ fun LoginScreen(
 
             // Tagline
             Text(
-                text = "Your groceries called—\nthey want to stay fresh.",
+                text = "Your groceries called-\nthey want to stay fresh.",
                 fontSize = 16.sp,
                 color = Color.White.copy(alpha = 0.9f),
                 textAlign = TextAlign.Center,
