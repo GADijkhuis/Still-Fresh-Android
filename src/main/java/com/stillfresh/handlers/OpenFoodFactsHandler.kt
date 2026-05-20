@@ -3,6 +3,7 @@ package com.stillfresh.handlers
 import android.util.Log
 import com.stillfresh.BuildConfig
 import com.stillfresh.dataclasses.openfoodfacts.OpenFoodFactsProductResult
+import com.stillfresh.dataclasses.openfoodfacts.OpenFoodFactsSearchResult
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -12,7 +13,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import kotlin.io.encoding.Base64
 
-class OpenFoodFactsHandler {
+object OpenFoodFactsHandler {
     private val httpClient = HttpClient() {
         headers {
             install(ContentNegotiation) {
@@ -32,29 +33,43 @@ class OpenFoodFactsHandler {
         }
     }
 
-    private val productUrl = BuildConfig.OPENFOODFACTS_API_URL + "product/"
-    private val searchUrl = BuildConfig.OPENFOODFACTS_API_URL + "search/"
+    private const val PRODUCT_URL = BuildConfig.OPENFOODFACTS_API_URL + "product/"
+    private const val SEARCH_URL = BuildConfig.OPENFOODFACTS_SEARCH_URL + "?search_simple=1&json=1&page_size=20&search_terms="
 
-    suspend fun getProductById(productId: String) {
+    suspend fun getProductById(productId: String) : OpenFoodFactsProductResult? {
         try {
-            val response = HttpRequestHandler.get("${productUrl}${productId}.json?fields=product_type,product_name,brands,packagings,image_url,ingredients", httpClient)
+            val response = HttpRequestHandler.get("${PRODUCT_URL}${productId}.json?fields=product_type,product_name,brands,packagings,image_url,ingredients", httpClient)
 
             if (response.status.value !in 200..299) {
                 //Response is invalid
                 throw Exception(response.status.toString())
             }
 
-            val responseClass: OpenFoodFactsProductResult = response.body()
-
-            Log.d("Food Fetch: ", responseClass.toString())
-
+            val productResult: OpenFoodFactsProductResult = response.body()
+            
+            return productResult
         } catch (e: Exception) {
-            Log.d("Food Fetch Error: ", e.toString())
+            Log.e("Food Fetch Error: ", e.toString())
+            return null
         }
     }
 
-    suspend fun getSearchResultsByName(searchValue: String) {
+    suspend fun getSearchResultsByName(searchValue: String) : OpenFoodFactsSearchResult? {
+        try {
+            val response = HttpRequestHandler.get("${SEARCH_URL}${searchValue}", httpClient)
 
+            if (response.status.value !in 200..299) {
+                //Response is invalid
+                throw Exception(response.status.toString())
+            }
+
+            val searchResult: OpenFoodFactsSearchResult = response.body();
+
+            return searchResult
+        } catch (e: Exception) {
+            Log.e("Food Fetch Error: ", e.toString())
+            return null
+        }
     }
 
 }

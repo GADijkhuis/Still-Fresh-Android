@@ -20,7 +20,7 @@ data class OpenFoodFactsProduct(
         if (productType != other.productType) return false
         if (productName != other.productName) return false
         if (brands != other.brands) return false
-        if (packagings != other.packagings) return false
+        if (!packagings.contentEquals(other.packagings)) return false
         if (imageUrl != other.imageUrl) return false
         if (!ingredients.contentEquals(other.ingredients)) return false
 

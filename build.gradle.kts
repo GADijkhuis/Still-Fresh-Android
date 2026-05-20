@@ -42,6 +42,12 @@ android {
 
         buildConfigField(
             type = "String",
+            name = "OPENFOODFACTS_SEARCH_URL",
+            value = properties.getProperty("OPENFOODFACTS_SEARCH_URL") ?: ""
+        )
+
+        buildConfigField(
+            type = "String",
             name = "OPENFOODFACTS_API_USER",
             value = properties.getProperty("OPENFOODFACTS_API_USER") ?: ""
         )
