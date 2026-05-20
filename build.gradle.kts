@@ -9,7 +9,7 @@ plugins {
 
 android {
     namespace = "com.stillfresh"
-    compileSdk = 36
+    compileSdk = 37
     buildFeatures.buildConfig = true
 
     defaultConfig {
@@ -55,19 +55,22 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.13.0")
     implementation("androidx.appcompat:appcompat:1.7.1")
     implementation("androidx.constraintlayout:constraintlayout:2.2.1")
-    implementation("com.google.android.material:material:1.13.0")
+    implementation("com.google.android.material:material:1.14.0")
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.github.jan-tennert.supabase:auth-kt")
     implementation("io.github.jan-tennert.supabase:realtime-kt")
 
-    implementation("io.ktor:ktor-client-android:3.0.3")
+    implementation("io.ktor:ktor-client-android:3.5.0")
+    implementation("io.ktor:ktor-client-auth:3.5.0")
+    implementation("io.ktor:ktor-client-content-negotiation:3.5.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 
     implementation(platform("androidx.compose:compose-bom:2024.02.02"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
 
