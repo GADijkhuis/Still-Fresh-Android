@@ -24,6 +24,13 @@
         <activity
             android:name=".activities.HomeActivity"
             android:exported="false" />
+        <activit
+            android:name=".activities.ScanReceiptActivity"
+            android:exported="false" />
+
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="ocr" />
     </application>
 
 </manifest>

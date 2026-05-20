@@ -1,5 +1,6 @@
 package com.stillfresh.activities
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -29,14 +30,22 @@ class HomeActivity : ComponentActivity() {
 
         setContent {
             StillFreshTheme {
-                HomeScreen(username = username)
+                HomeScreen(
+                    username = username,
+                    onAddClick = {
+                        startActivity(Intent(this@HomeActivity, ScanReceiptActivity::class.java))
+                    }
+                )
             }
         }
     }
 }
 
 @Composable
-fun HomeScreen(username: String) {
+fun HomeScreen(
+    username: String,
+    onAddClick: () -> Unit
+) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Scaffold(
@@ -51,7 +60,7 @@ fun HomeScreen(username: String) {
             HomeBottomBar(
                 selectedTab = selectedTab,
                 onTabSelected = { selectedTab = it },
-                onAddClick = { /* TODO: add item */ }
+                onAddClick = onAddClick
             )
         }
     ) { paddingValues ->
