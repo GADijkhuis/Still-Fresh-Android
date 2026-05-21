@@ -34,6 +34,36 @@ android {
             value = properties.getProperty("SUPABASE_API_KEY") ?: ""
         )
 
+        buildConfigField(
+            type = "String",
+            name = "OPENFOODFACTS_API_URL",
+            value = properties.getProperty("OPENFOODFACTS_API_URL") ?: ""
+        )
+
+        buildConfigField(
+            type = "String",
+            name = "OPENFOODFACTS_SEARCH_URL",
+            value = properties.getProperty("OPENFOODFACTS_SEARCH_URL") ?: ""
+        )
+
+        buildConfigField(
+            type = "String",
+            name = "OPENFOODFACTS_API_USER",
+            value = properties.getProperty("OPENFOODFACTS_API_USER") ?: ""
+        )
+
+        buildConfigField(
+            type = "String",
+            name = "OPENFOODFACTS_API_PASS",
+            value = properties.getProperty("OPENFOODFACTS_API_PASS") ?: ""
+        )
+
+        buildConfigField(
+            type = "String",
+            name = "OPENFOODFACTS_API_MAIL",
+            value = properties.getProperty("OPENFOODFACTS_API_MAIL") ?: ""
+        )
+
     }
 
     compileOptions {
