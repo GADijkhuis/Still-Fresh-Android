@@ -2,11 +2,10 @@ package com.stillfresh.activities
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
-import android.provider.MediaStore
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -23,36 +22,33 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
+import androidx.core.net.toFile
 import com.stillfresh.components.StillFreshButton
+import com.stillfresh.handlers.CameraFileHandler
 import com.stillfresh.theme.StillFreshTheme
-import java.io.ByteArrayOutputStream
+import kotlinx.io.IOException
+import java.io.File
+import java.util.Calendar
 
 
 class AddProductOptionsActivity : ComponentActivity() {
 
-//    private var photoUri: Uri? = null
-//    private var scannedImage: Bitmap? = null
+    private lateinit var photoUri: Uri
 
-    val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        when (result.resultCode) {
-            RESULT_OK -> {
-                val imageBitmap = result.data?.extras?.get("data") as Bitmap
-                Log.i("Camera Result Type: ", imageBitmap.height.toString())
+    val resultLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+        if (!success) {
+            return@registerForActivityResult
+        }
 
-                val stream = ByteArrayOutputStream()
-                imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-
-                val byteArray = stream.toByteArray()
-                imageBitmap.recycle()
-
-                val scanReceiptIntent = Intent(this@AddProductOptionsActivity, ScanReceiptActivity::class.java)
-                scanReceiptIntent.putExtra("scannedImage", byteArray)
-
-                startActivity(scanReceiptIntent)
-            }
-            else -> {
-                Log.e("Camera Result Type: ", "NO RESULT: ${result.resultCode}")
-            }
+        try {
+            val scanReceiptIntent = Intent(this@AddProductOptionsActivity, ScanReceiptActivity::class.java)
+            scanReceiptIntent.putExtra("imageURI", photoUri.toString())
+            startActivity(scanReceiptIntent)
+        } catch (e: ActivityNotFoundException) {
+            Toast.makeText(this, e.message, Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, e.message, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -66,39 +62,18 @@ class AddProductOptionsActivity : ComponentActivity() {
                 )
             }
         }
-
-
     }
 
     private fun dispatchTakePictureIntent() {
-
         try {
-            val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-
-//            val photoFile = createImageFile();
-//            photoUri = FileProvider.getUriForFile(
-//                this,
-//                "$packageName.fileprovider", // FileProvider authority (defined in manifest)
-//                photoFile
-//            );
-
-            resultLauncher.launch(takePictureIntent)
+            photoUri = CameraFileHandler.getImageUri(applicationContext)
+            resultLauncher.launch(photoUri)
         } catch (e: ActivityNotFoundException) {
-            Log.e("Camera Exception", e.toString())
+            Toast.makeText(this, e.message, Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, e.message, Toast.LENGTH_SHORT).show()
         }
     }
-//
-//    @Throws(IOException::class)
-//    private fun createImageFile(): File {
-//        // Create a directory inside cache to store images (if not already created)
-//        val imageDir = File(cacheDir, "images")
-//        if (!imageDir.exists()) {
-//            imageDir.mkdirs()
-//        }
-//        // Create a temp file with prefix "captured_" and suffix ".jpg"
-//        return File.createTempFile("captured_", ".jpg", imageDir)
-//    }
-
 }
 
 @Composable
