@@ -1,52 +1,80 @@
 package com.stillfresh.activities
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.provider.MediaStore
-import android.util.Log
-import android.widget.Button
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.core.app.ActivityCompat
-import com.stillfresh.components.StillFreshButton
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
 import com.stillfresh.theme.StillFreshTheme
 
 class ScanReceiptActivity : ComponentActivity() {
-    private val REQUEST_IMAGE_CAPTURE = 1
+    lateinit var scannedImage: Bitmap
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val bmpByteArray: ByteArray? = intent?.getByteArrayExtra("scannedImage")
+
+        if (bmpByteArray != null) {
+            scannedImage = BitmapFactory.decodeByteArray(bmpByteArray, 0, bmpByteArray.count())
+        } else {
+            Toast.makeText(this@ScanReceiptActivity, "No image found", Toast.LENGTH_LONG).show()
+            finish()
+        }
+
         enableEdgeToEdge()
         setContent {
             StillFreshTheme {
                 ScanReceiptScreen(
-                    onTakePicture = { dispatchTakePictureIntent() }
+                    scannedImage
                 )
             }
-        }
-
-
-    }
-
-    private fun dispatchTakePictureIntent() {
-        val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        try {
-            ActivityCompat.startActivityForResult(this, takePictureIntent, REQUEST_IMAGE_CAPTURE, null)
-        } catch (e: ActivityNotFoundException) {
-            Log.e("Camera Exception", e.toString())
         }
     }
 }
 
 @Composable
 fun ScanReceiptScreen(
-    onTakePicture: () -> Unit
+    scannedImage: Bitmap
 ) {
-    StillFreshButton(
-        text = "Scan Receipt",
-        onClick = onTakePicture
-    )
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .systemBarsPadding()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Image(
+                bitmap = scannedImage.asImageBitmap(),
+                modifier = Modifier.fillMaxSize().fillMaxWidth(),
+                contentScale = ContentScale.FillWidth,
+                contentDescription = null
+            )
+        }
+    }
 }

@@ -33,7 +33,7 @@ class HomeActivity : ComponentActivity() {
                 HomeScreen(
                     username = username,
                     onAddClick = {
-                        startActivity(Intent(this@HomeActivity, ScanReceiptActivity::class.java))
+                        startActivity(Intent(this@HomeActivity, AddProductOptionsActivity::class.java))
                     }
                 )
             }
