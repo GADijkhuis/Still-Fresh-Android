@@ -73,6 +73,7 @@ class AddProductOptionsActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddProductOptionsScreen(
     onScanReceipt: () -> Unit,
@@ -82,42 +83,28 @@ fun AddProductOptionsScreen(
 ) {
     val teal = Color(0xFF70B9BE)
     val darkText = Color(0xFF2D3436)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.4f)),
-        contentAlignment = Alignment.BottomCenter
-    ) {
-        // Dismiss area (tap outside the sheet)
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable(
-                    indication = null,
-                    interactionSource = remember { MutableInteractionSource() },
-                    onClick = onDismiss
-                )
-        )
-
-        // Bottom sheet (stops touch propagation)
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.White, RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                .padding(horizontal = 24.dp, vertical = 28.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Handle bar
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = Color.White,
+        dragHandle = {
             Box(
                 modifier = Modifier
+                    .padding(top = 12.dp)
                     .width(40.dp)
                     .height(4.dp)
                     .background(Color(0xFFE0E0E0), CircleShape)
             )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Text(
                 text = "Add Product",
                 fontSize = 20.sp,

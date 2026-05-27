@@ -1,8 +1,11 @@
 package com.stillfresh.activities
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -15,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.stillfresh.components.HomeBottomBar
 import com.stillfresh.components.HomeHeader
 import com.stillfresh.config.SupabaseConfig
@@ -26,6 +30,16 @@ import kotlinx.serialization.json.jsonPrimitive
 class HomeActivity : ComponentActivity() {
 
     private lateinit var photoUri: Uri
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            launchCamera()
+        } else {
+            Toast.makeText(this, "Camera permission is required to scan receipts", Toast.LENGTH_LONG).show()
+        }
+    }
 
     private val cameraLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success) {
@@ -47,8 +61,7 @@ class HomeActivity : ComponentActivity() {
                 HomeScreen(
                     username = username,
                     onScanReceipt = {
-                        photoUri = CameraFileHandler.getImageUri(applicationContext)
-                        cameraLauncher.launch(photoUri)
+                        checkCameraPermissionAndLaunch()
                     },
                     onManualEntry = {
                         startActivity(Intent(this@HomeActivity, ManualEntryActivity::class.java))
@@ -59,6 +72,25 @@ class HomeActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    private fun checkCameraPermissionAndLaunch() {
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                launchCamera()
+            }
+            else -> {
+                requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+        }
+    }
+
+    private fun launchCamera() {
+        photoUri = CameraFileHandler.getImageUri(applicationContext)
+        cameraLauncher.launch(photoUri)
     }
 }
 
