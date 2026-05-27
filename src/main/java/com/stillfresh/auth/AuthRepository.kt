@@ -1,11 +1,11 @@
 package com.stillfresh.auth
 
+import com.stillfresh.CryptoHelper
 import com.stillfresh.config.SupabaseConfig
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
 
 object AuthRepository {
@@ -54,8 +54,8 @@ object AuthRepository {
                 .select { filter { eq("email", email) } }
                 .decodeSingleOrNull<Map<String, String>>()
 
-            val userSalt = userRow?.get("salt")
-                ?: throw Exception("Gebruiker niet gevonden")
+            val userSalt = userRow?.get("password_salt")
+                ?: throw Exception("Gebruiker niet")
 
             val customHashedPassword = CryptoHelper.hashPassword(password, userSalt)
 

@@ -1,3 +1,5 @@
+package com.stillfresh
+
 import org.mindrot.jbcrypt.BCrypt
 
 object CryptoHelper {
