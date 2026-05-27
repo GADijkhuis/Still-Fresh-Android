@@ -3,6 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
 
     <application
         android:icon="@mipmap/ic_launcher"
@@ -26,11 +27,13 @@
             android:name=".activities.HomeActivity"
             android:exported="false" />
         <activity
-            android:name=".activities.AddProductOptionsActivity"
-            android:exported="false" />
-
-        <activity
             android:name=".activities.ScanReceiptActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.ManualEntryActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.BarcodeScanActivity"
             android:exported="false" />
 
         <meta-data
