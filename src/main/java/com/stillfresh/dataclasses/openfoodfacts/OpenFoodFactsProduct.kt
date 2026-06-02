@@ -4,11 +4,11 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class OpenFoodFactsProduct(
-    val productType: String? = null,
-    val productName: String? = null,
+    val product_type: String? = null,
+    val product_name: String? = null,
     val brands: String? = null,
     val packagings: Array<OpenFoodFactsPackaging>? = null,
-    val imageUrl: String? = null,
+    val image_url: String? = null,
     val ingredients: Array<OpenFoodFactsIngredients>? = null
 ) {
     override fun equals(other: Any?): Boolean {
@@ -17,22 +17,22 @@ data class OpenFoodFactsProduct(
 
         other as OpenFoodFactsProduct
 
-        if (productType != other.productType) return false
-        if (productName != other.productName) return false
+        if (product_type != other.product_type) return false
+        if (product_name != other.product_name) return false
         if (brands != other.brands) return false
         if (!packagings.contentEquals(other.packagings)) return false
-        if (imageUrl != other.imageUrl) return false
+        if (image_url != other.image_url) return false
         if (!ingredients.contentEquals(other.ingredients)) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        var result = productType?.hashCode() ?: 0
-        result = 31 * result + (productName?.hashCode() ?: 0)
+        var result = product_type?.hashCode() ?: 0
+        result = 31 * result + (product_name?.hashCode() ?: 0)
         result = 31 * result + (brands?.hashCode() ?: 0)
         result = 31 * result + (packagings?.hashCode() ?: 0)
-        result = 31 * result + (imageUrl?.hashCode() ?: 0)
+        result = 31 * result + (image_url?.hashCode() ?: 0)
         result = 31 * result + (ingredients?.contentHashCode() ?: 0)
         return result
     }
