@@ -32,40 +32,60 @@ import com.stillfresh.components.AppLogo
 import com.stillfresh.components.StillFreshButton
 import com.stillfresh.components.StillFreshOutlinedButton
 import com.stillfresh.components.StillFreshTextField
+import com.stillfresh.config.SupabaseConfig
 import com.stillfresh.theme.StillFreshTheme
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.status.SessionStatus
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent {
-            StillFreshTheme {
-                var isLoading by remember { mutableStateOf(false) }
 
-                LoginScreen(
-                    isLoading = isLoading,
-                    onLogin = { email, password ->
-                        isLoading = true
-                        lifecycleScope.launch {
-                            val result = AuthRepository.login(email, password)
-                            isLoading = false
-                            result.fold(
-                                onSuccess = {
-                                    Toast.makeText(this@MainActivity, "Login successful!", Toast.LENGTH_SHORT).show()
-                                    startActivity(Intent(this@MainActivity, HomeActivity::class.java))
-                                    finish()
-                                },
-                                onFailure = { error ->
-                                    Toast.makeText(this@MainActivity, error.message ?: "Login failed", Toast.LENGTH_LONG).show()
-                                }
-                            )
+        // Check for existing session before showing login screen
+        lifecycleScope.launch {
+            val status = SupabaseConfig.client.auth.sessionStatus
+                .filter { it !is SessionStatus.Initializing }
+                .first()
+
+            if (status is SessionStatus.Authenticated) {
+                // Already logged in — go straight to home
+                startActivity(Intent(this@MainActivity, HomeActivity::class.java))
+                finish()
+                return@launch
+            }
+
+            // No session — show login screen
+            setContent {
+                StillFreshTheme {
+                    var isLoading by remember { mutableStateOf(false) }
+
+                    LoginScreen(
+                        isLoading = isLoading,
+                        onLogin = { email, password ->
+                            isLoading = true
+                            lifecycleScope.launch {
+                                val result = AuthRepository.login(email, password)
+                                isLoading = false
+                                result.fold(
+                                    onSuccess = {
+                                        startActivity(Intent(this@MainActivity, HomeActivity::class.java))
+                                        finish()
+                                    },
+                                    onFailure = { error ->
+                                        Toast.makeText(this@MainActivity, error.message ?: "Login failed", Toast.LENGTH_LONG).show()
+                                    }
+                                )
+                            }
+                        },
+                        onSignUp = {
+                            startActivity(Intent(this@MainActivity, SignUpActivity::class.java))
                         }
-                    },
-                    onSignUp = {
-                        startActivity(Intent(this@MainActivity, SignUpActivity::class.java))
-                    }
-                )
+                    )
+                }
             }
         }
     }
