@@ -1,10 +1,12 @@
 package com.stillfresh.auth
 
+import com.stillfresh.CryptoHelper
 import com.stillfresh.config.SupabaseConfig
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import io.github.jan.supabase.postgrest.postgrest
 
 object AuthRepository {
 
@@ -17,13 +19,26 @@ object AuthRepository {
      */
     suspend fun signUp(username: String, email: String, password: String): Result<Unit> {
         return try {
-            client.auth.signUpWith(Email) {
+            val userSalt = CryptoHelper.generateSalt()
+            val customHashedPassword = CryptoHelper.hashPassword(password, userSalt)
+
+            val authResult = client.auth.signUpWith(Email) {
                 this.email = email
-                this.password = password
+                this.password = customHashedPassword
                 this.data = buildJsonObject {
                     put("username", username)
                 }
             }
+
+            val userId = authResult?.id ?: throw Exception("Auth registratie mislukt of ID is null")
+
+            val userData = mapOf(
+                "id" to userId,
+                "email" to email,
+                "password_salt" to userSalt
+            )
+
+            client.postgrest["custom_users"].insert(userData)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -35,9 +50,18 @@ object AuthRepository {
      */
     suspend fun login(email: String, password: String): Result<Unit> {
         return try {
+            val userRow = client.postgrest["custom_users"]
+                .select { filter { eq("email", email) } }
+                .decodeSingleOrNull<Map<String, String>>()
+
+            val userSalt = userRow?.get("password_salt")
+                ?: throw Exception("Gebruiker niet")
+
+            val customHashedPassword = CryptoHelper.hashPassword(password, userSalt)
+
             client.auth.signInWith(Email) {
                 this.email = email
-                this.password = password
+                this.password = customHashedPassword
             }
             Result.success(Unit)
         } catch (e: Exception) {
