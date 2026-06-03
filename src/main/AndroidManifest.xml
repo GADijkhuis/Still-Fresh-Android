@@ -10,6 +10,7 @@
         android:allowBackup="true"
         android:label="StillFresh?"
         android:supportsRtl="true"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:theme="@style/Theme.StillFresh">
         <activity
             android:name=".activities.MainActivity"

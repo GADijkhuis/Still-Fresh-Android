@@ -34,3 +34,4 @@ google-services.json
 *.hprof
 
 
+src/main/res/xml/keys.xml

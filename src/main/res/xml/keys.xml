@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<pin-set expiration="2026-07-21" pin-set="@xml/keys">
+    <item name="off-open_food_facts_pin">OPENFOODFACTS-PIN</item>
+</pin-set>
