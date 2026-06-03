@@ -48,12 +48,6 @@ android {
 
         buildConfigField(
             type = "String",
-            name = "OPENFOODFACTS_CERTIFICATE_PIN",
-            value = properties.getProperty("OPENFOODFACTS_CERTIFICATE_PIN") ?: ""
-        )
-
-        buildConfigField(
-            type = "String",
             name = "OPENFOODFACTS_API_USER",
             value = properties.getProperty("OPENFOODFACTS_API_USER") ?: ""
         )
@@ -69,8 +63,6 @@ android {
             name = "OPENFOODFACTS_API_MAIL",
             value = properties.getProperty("OPENFOODFACTS_API_MAIL") ?: ""
         )
-
-        resValue("string", "open_food_facts_pin", properties.getProperty("OPENFOODFACTS_CERTIFICATE_PIN") ?: "")
     }
 
     compileOptions {
