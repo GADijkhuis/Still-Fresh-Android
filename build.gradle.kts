@@ -63,7 +63,6 @@ android {
             name = "OPENFOODFACTS_API_MAIL",
             value = properties.getProperty("OPENFOODFACTS_API_MAIL") ?: ""
         )
-
     }
 
     compileOptions {
