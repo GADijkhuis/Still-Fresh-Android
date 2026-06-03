@@ -33,5 +33,3 @@ google-services.json
 # Android Profiling
 *.hprof
 
-
-src/main/res/xml/keys.xml
