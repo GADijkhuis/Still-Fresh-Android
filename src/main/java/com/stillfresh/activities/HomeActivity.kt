@@ -121,19 +121,28 @@ fun HomeScreen(
             )
         }
     ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(Color(0xFFF2F2F7)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "Content coming soon",
-                color = Color.Gray,
-                fontSize = 16.sp
-            )
+        when (selectedTab) {
+            1 -> {
+                SearchActivity.SearchView()
+            }
+            else -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .background(Color(0xFFF2F2F7)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Content coming soon",
+                        color = Color.Gray,
+                        fontSize = 16.sp
+                    )
+                }
+            }
         }
+
+
     }
 
     if (showAddSheet) {

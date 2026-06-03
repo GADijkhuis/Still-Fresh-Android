@@ -63,7 +63,9 @@ object OpenFoodFactsHandler {
                 throw Exception(response.status.toString())
             }
 
-            val searchResult: OpenFoodFactsSearchResult = response.body();
+            val searchResult: OpenFoodFactsSearchResult = response.body()
+
+            Log.i("Fetched products", response.body())
 
             return searchResult
         } catch (e: Exception) {
