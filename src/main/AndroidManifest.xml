@@ -27,6 +27,9 @@
             android:name=".activities.HomeActivity"
             android:exported="false" />
         <activity
+            android:name=".activities.AccountActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.ScanReceiptActivity"
             android:exported="false" />
         <activity

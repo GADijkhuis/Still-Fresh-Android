@@ -33,8 +33,8 @@ object OpenFoodFactsHandler {
         }
     }
 
-    private const val PRODUCT_URL = BuildConfig.OPENFOODFACTS_API_URL + "product/"
-    private const val SEARCH_URL = BuildConfig.OPENFOODFACTS_SEARCH_URL + "?search_simple=1&json=1&page_size=20&search_terms="
+    private val PRODUCT_URL = BuildConfig.OPENFOODFACTS_API_URL + "product/"
+    private val SEARCH_URL = BuildConfig.OPENFOODFACTS_SEARCH_URL + "?search_simple=1&json=1&page_size=20&search_terms="
 
     suspend fun getProductById(productId: String) : OpenFoodFactsProductResult? {
         try {
