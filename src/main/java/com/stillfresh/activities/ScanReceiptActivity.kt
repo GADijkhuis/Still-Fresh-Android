@@ -1,5 +1,6 @@
 package com.stillfresh.activities
 
+import android.app.DatePickerDialog
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.os.Build
@@ -11,6 +12,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +21,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -28,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
@@ -37,10 +42,17 @@ import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.stillfresh.components.StillFreshButton
 import com.stillfresh.components.StillFreshTextField
+import com.stillfresh.config.SupabaseConfig
+import com.stillfresh.dataclasses.Product
+import com.stillfresh.handlers.NotificationHandler
+import com.stillfresh.handlers.ProductHandler
 import com.stillfresh.handlers.ScannedProduct
 import com.stillfresh.handlers.VisionHandler
 import com.stillfresh.theme.StillFreshTheme
+import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.util.Calendar
 
 class ScanReceiptActivity : ComponentActivity() {
 
@@ -84,6 +96,9 @@ class ScanReceiptActivity : ComponentActivity() {
                     }
                 }
 
+                val user = SupabaseConfig.client.auth.currentUserOrNull()
+                val userId = user?.id ?: ""
+
                 ScanReceiptScreen(
                     bitmap = bitmap,
                     isScanning = isScanning,
@@ -114,8 +129,27 @@ class ScanReceiptActivity : ComponentActivity() {
                     },
                     onConfirm = {
                         val selected = products.filter { checkedProducts.contains(it.name) }
-                        Toast.makeText(this@ScanReceiptActivity, "${selected.size} products added", Toast.LENGTH_SHORT).show()
-                        finish()
+                        lifecycleScope.launch {
+                            try {
+                                val productsToSave = selected.map {
+                                    Product(
+                                        user_id = userId,
+                                        name = it.name,
+                                        quantity = it.quantity,
+                                        purchase_date = LocalDate.now().toString(),
+                                        expiration_date = it.expirationDate
+                                    )
+                                }
+                                ProductHandler.addProducts(productsToSave)
+                                productsToSave.forEach { product ->
+                                    NotificationHandler.scheduleExpirationNotification(this@ScanReceiptActivity, product.name, product.expiration_date)
+                                }
+                                Toast.makeText(this@ScanReceiptActivity, "${selected.size} products added", Toast.LENGTH_SHORT).show()
+                                finish()
+                            } catch (e: Exception) {
+                                Toast.makeText(this@ScanReceiptActivity, "Error saving products: ${e.message}", Toast.LENGTH_LONG).show()
+                            }
+                        }
                     },
                     onCancel = { finish() }
                 )
@@ -269,9 +303,17 @@ fun ScanReceiptScreen(
                                     fontWeight = FontWeight.Medium,
                                     color = darkText
                                 )
-                                if (product.quantity > 1) {
+                                Row {
+                                    if (product.quantity > 1) {
+                                        Text(
+                                            text = "Qty: ${product.quantity}",
+                                            fontSize = 12.sp,
+                                            color = Color.Gray
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                    }
                                     Text(
-                                        text = "Qty: ${product.quantity}",
+                                        text = "Exp: ${product.expirationDate}",
                                         fontSize = 12.sp,
                                         color = Color.Gray
                                     )
@@ -366,7 +408,21 @@ fun ProductEditDialog(
 ) {
     var name by remember { mutableStateOf(product.name) }
     var quantity by remember { mutableStateOf(product.quantity.toString()) }
+    var expirationDate by remember { mutableStateOf(product.expirationDate) }
     val teal = Color(0xFF70B9BE)
+    val context = LocalContext.current
+
+    val calendar = Calendar.getInstance()
+    val datePickerDialog = DatePickerDialog(
+        context,
+        { _, year, month, dayOfMonth ->
+            val selectedDate = LocalDate.of(year, month + 1, dayOfMonth)
+            expirationDate = selectedDate.toString()
+        },
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH),
+        calendar.get(Calendar.DAY_OF_MONTH)
+    )
 
     Dialog(onDismissRequest = onDismiss) {
         Column(
@@ -418,6 +474,31 @@ fun ProductEditDialog(
                 )
             )
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = expirationDate,
+                onValueChange = { },
+                label = { Text("Expiration Date") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) { datePickerDialog.show() },
+                shape = RoundedCornerShape(12.dp),
+                readOnly = true,
+                enabled = false,
+                trailingIcon = {
+                    Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = teal)
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    disabledBorderColor = Color(0xFFCCCCCC),
+                    disabledLabelColor = teal,
+                    disabledTextColor = Color(0xFF2D3436)
+                )
+            )
+
             Spacer(modifier = Modifier.height(24.dp))
 
             Row(
@@ -435,7 +516,8 @@ fun ProductEditDialog(
                     onClick = {
                         onConfirm(ScannedProduct(
                             name = name.trim(),
-                            quantity = quantity.toIntOrNull() ?: 1
+                            quantity = quantity.toIntOrNull() ?: 1,
+                            expirationDate = expirationDate
                         ))
                     },
                     enabled = name.isNotBlank(),
