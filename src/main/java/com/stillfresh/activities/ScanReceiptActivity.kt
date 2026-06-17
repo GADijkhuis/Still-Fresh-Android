@@ -44,6 +44,7 @@ import com.stillfresh.components.StillFreshButton
 import com.stillfresh.components.StillFreshTextField
 import com.stillfresh.config.SupabaseConfig
 import com.stillfresh.dataclasses.Product
+import com.stillfresh.handlers.NotificationHandler
 import com.stillfresh.handlers.ProductHandler
 import com.stillfresh.handlers.ScannedProduct
 import com.stillfresh.handlers.VisionHandler
@@ -140,6 +141,9 @@ class ScanReceiptActivity : ComponentActivity() {
                                     )
                                 }
                                 ProductHandler.addProducts(productsToSave)
+                                productsToSave.forEach { product ->
+                                    NotificationHandler.scheduleExpirationNotification(this@ScanReceiptActivity, product.name, product.expiration_date)
+                                }
                                 Toast.makeText(this@ScanReceiptActivity, "${selected.size} products added", Toast.LENGTH_SHORT).show()
                                 finish()
                             } catch (e: Exception) {

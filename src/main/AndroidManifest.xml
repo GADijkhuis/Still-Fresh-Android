@@ -4,6 +4,8 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <application
         android:icon="@mipmap/ic_launcher"
@@ -38,6 +40,10 @@
             android:exported="false" />
         <activity
             android:name=".activities.BarcodeScanActivity"
+            android:exported="false" />
+
+        <receiver
+            android:name=".handlers.NotificationReceiver"
             android:exported="false" />
 
         <meta-data

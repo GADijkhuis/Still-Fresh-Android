@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import com.stillfresh.components.StillFreshButton
 import com.stillfresh.config.SupabaseConfig
 import com.stillfresh.dataclasses.Product
+import com.stillfresh.handlers.NotificationHandler
 import com.stillfresh.handlers.ProductHandler
 import com.stillfresh.theme.StillFreshTheme
 import io.github.jan.supabase.auth.auth
@@ -75,6 +76,9 @@ class ManualEntryActivity : ComponentActivity() {
                                     )
                                 }
                                 ProductHandler.addProducts(productsToSave)
+                                productsToSave.forEach { product ->
+                                    NotificationHandler.scheduleExpirationNotification(this@ManualEntryActivity, product.name, product.expiration_date)
+                                }
                                 Toast.makeText(this@ManualEntryActivity, "${products.size} products added", Toast.LENGTH_SHORT).show()
                                 finish()
                             } catch (e: Exception) {
