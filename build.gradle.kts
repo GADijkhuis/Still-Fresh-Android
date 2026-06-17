@@ -63,7 +63,6 @@ android {
             name = "OPENFOODFACTS_API_MAIL",
             value = properties.getProperty("OPENFOODFACTS_API_MAIL") ?: ""
         )
-
     }
 
     compileOptions {
@@ -89,6 +88,7 @@ dependencies {
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.github.jan-tennert.supabase:auth-kt")
     implementation("io.github.jan-tennert.supabase:realtime-kt")
+    implementation("io.github.jan-tennert.supabase:storage-kt")
 
     implementation("io.ktor:ktor-client-android:3.5.0")
     implementation("io.ktor:ktor-client-auth:3.5.0")
@@ -104,6 +104,7 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("org.mindrot:jbcrypt:0.4")
+    implementation("io.coil-kt:coil-compose:2.6.0")
 
     implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
     implementation("com.google.mlkit:barcode-scanning:17.3.0")

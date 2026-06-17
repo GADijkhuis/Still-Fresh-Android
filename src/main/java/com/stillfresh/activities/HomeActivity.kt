@@ -76,6 +76,9 @@ class HomeActivity : ComponentActivity() {
                     },
                     onScanBarcode = {
                         startActivity(Intent(this@HomeActivity, BarcodeScanActivity::class.java))
+                    },
+                    onProfileClick = {
+                        startActivity(Intent(this@HomeActivity, AccountActivity::class.java))
                     }
                 )
             }
@@ -107,7 +110,8 @@ fun HomeScreen(
     username: String,
     onScanReceipt: () -> Unit = {},
     onManualEntry: () -> Unit = {},
-    onScanBarcode: () -> Unit = {}
+    onScanBarcode: () -> Unit = {},
+    onProfileClick: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     var showAddSheet by remember { mutableStateOf(false) }
@@ -118,14 +122,21 @@ fun HomeScreen(
         topBar = {
             HomeHeader(
                 username = username,
-                onProfileClick = { /* TODO: open profile */ }
+                onProfileClick = onProfileClick
             )
         },
         bottomBar = {
             HomeBottomBar(
                 selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it },
-                onAddClick = { showAddSheet = true }
+                onTabSelected = { index ->
+                    if (index == 3) {
+                        onProfileClick()
+                    } else {
+                        selectedTab = index
+                    }
+                },
+                onAddClick = { showAddSheet = true },
+                username = username
             )
         }
     ) { paddingValues ->
