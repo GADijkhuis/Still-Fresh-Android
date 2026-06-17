@@ -1,6 +1,7 @@
 package com.stillfresh.activities
 
 import android.app.DatePickerDialog
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -45,6 +46,7 @@ import androidx.lifecycle.ViewModel
 import com.stillfresh.components.StillFreshIconButton
 import com.stillfresh.config.SupabaseConfig
 import com.stillfresh.dataclasses.Product
+import com.stillfresh.handlers.NotificationHandler
 import com.stillfresh.handlers.ProductHandler
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.launch
@@ -54,6 +56,8 @@ import java.util.Calendar
 object InventoryView: ViewModel() {
     @Composable
     fun InventoryView(onBack: () -> Unit) {
+        val context = LocalContext.current
+
         val user = SupabaseConfig.client.auth.currentUserOrNull()
         if (user == null) {
             onBack()
@@ -109,7 +113,6 @@ object InventoryView: ViewModel() {
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(products) { product ->
@@ -119,12 +122,14 @@ object InventoryView: ViewModel() {
                                 scope.launch {
                                     ProductHandler.deleteProduct(product.id!!)
                                     products = products.filter { it.id != product.id }
+                                    Toast.makeText(context, "Product deleted!", Toast.LENGTH_SHORT).show()
                                 }
                             },
                             onUpdateExpiry = { newDate ->
                                 scope.launch {
                                     val updatedProduct = product.copy(expiration_date = newDate)
                                     ProductHandler.updateProduct(updatedProduct)
+                                    NotificationHandler.scheduleExpirationNotification(context, updatedProduct.name, updatedProduct.expiration_date)
                                     products = products.map { if (it.id == product.id) updatedProduct else it }
                                 }
                             }

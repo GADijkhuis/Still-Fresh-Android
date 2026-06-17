@@ -41,6 +41,7 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.stillfresh.config.SupabaseConfig
 import com.stillfresh.dataclasses.Product
+import com.stillfresh.handlers.NotificationHandler
 import com.stillfresh.handlers.OpenFoodFactsHandler
 import com.stillfresh.handlers.ProductHandler
 import com.stillfresh.theme.StillFreshTheme
@@ -97,6 +98,7 @@ class BarcodeScanActivity : ComponentActivity() {
                                     expiration_date = LocalDate.now().plusDays(7).toString()
                                 )
                                 ProductHandler.addProduct(productToSave)
+                                NotificationHandler.scheduleExpirationNotification(this@BarcodeScanActivity, productToSave.name, productToSave.expiration_date)
                                 Toast.makeText(this@BarcodeScanActivity, "$name added", Toast.LENGTH_SHORT).show()
                                 finish()
                             } catch (e: Exception) {

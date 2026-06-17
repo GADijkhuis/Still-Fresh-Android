@@ -38,6 +38,7 @@ import com.stillfresh.config.SupabaseConfig
 import com.stillfresh.dataclasses.Product
 import com.stillfresh.dataclasses.openfoodfacts.OpenFoodFactsProduct
 import com.stillfresh.enums.SearchLoadingState
+import com.stillfresh.handlers.NotificationHandler
 import com.stillfresh.handlers.OpenFoodFactsHandler
 import com.stillfresh.handlers.ProductHandler
 import io.github.jan.supabase.auth.auth
@@ -161,6 +162,7 @@ object SearchActivity : ViewModel() {
                                                 expiration_date = LocalDate.now().plusDays(7).toString()
                                             )
                                             ProductHandler.addProduct(productToSave)
+                                            NotificationHandler.scheduleExpirationNotification(context, productToSave.name, productToSave.expiration_date)
                                             Toast.makeText(context, "$name added to inventory", Toast.LENGTH_SHORT).show()
                                         } catch (e: Exception) {
                                             Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
