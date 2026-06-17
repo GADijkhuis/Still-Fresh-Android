@@ -10,7 +10,8 @@ import kotlin.coroutines.suspendCoroutine
 
 data class ScannedProduct(
     val name: String,
-    val quantity: Int = 1
+    val quantity: Int = 1,
+    val expirationDate: String = java.time.LocalDate.now().plusDays(7).toString()
 )
 
 object VisionHandler {

@@ -6,7 +6,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Inventory
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -43,7 +43,7 @@ fun HomeBottomBar(
     val items = listOf(
         BottomNavItem(Icons.Outlined.Home, "Home"),
         BottomNavItem(Icons.Outlined.Search, "Search"),
-        BottomNavItem(Icons.Outlined.Notifications, "Alerts")
+        BottomNavItem(Icons.Outlined.Inventory, "Inventory")
     )
 
     val avatarUrl = "https://api.dicebear.com/8.x/bottts-neutral/png?seed=$username&size=48"
