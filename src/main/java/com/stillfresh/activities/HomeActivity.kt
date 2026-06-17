@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.stillfresh.components.HomeBottomBar
 import com.stillfresh.components.HomeHeader
-import com.stillfresh.components.InventoryView
 import com.stillfresh.config.SupabaseConfig
 import com.stillfresh.handlers.CameraFileHandler
 import com.stillfresh.theme.StillFreshTheme
@@ -70,9 +69,6 @@ class HomeActivity : ComponentActivity() {
                     onScanBarcode = {
                         startActivity(Intent(this@HomeActivity, BarcodeScanActivity::class.java))
                     },
-                    onInventoryClick = {
-                        startActivity(Intent(this@HomeActivity, InventoryActivity::class.java))
-                    },
                     onProfileClick = {
                         startActivity(Intent(this@HomeActivity, AccountActivity::class.java))
                     }
@@ -107,7 +103,6 @@ fun HomeScreen(
     onScanReceipt: () -> Unit = {},
     onManualEntry: () -> Unit = {},
     onScanBarcode: () -> Unit = {},
-    onInventoryClick: () -> Unit = {},
     onProfileClick: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -138,10 +133,7 @@ fun HomeScreen(
                 SearchActivity.SearchView()
             }
             2 -> {
-                val user = SupabaseConfig.client.auth.currentUserOrNull()
-                if (user != null) {
-                    InventoryView(userId = user.id)
-                }
+                InventoryView.InventoryView(onBack = { selectedTab = 0 })
             }
             3 -> {
                 onProfileClick()
