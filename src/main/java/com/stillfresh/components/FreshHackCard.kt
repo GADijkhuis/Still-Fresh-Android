@@ -11,9 +11,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.stillfresh.dataclasses.FoodTip
 
 @Composable
-fun FreshHackCard() {
+fun FreshHackCard(
+    tip: FoodTip
+) {
     Card(
         modifier = Modifier
             .width(260.dp)
@@ -25,20 +28,20 @@ fun FreshHackCard() {
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+                .padding(20.dp),
         ) {
             Text(
-                text = "Store cheese in wax paper, not plastic.",
+                text = tip.title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
 
+            Spacer(modifier = Modifier.height(12.dp))
+
             Text(
-                text = "Tips",
-                color = Color.White
+                text = tip.category,
+                color = Color.White.copy(alpha = 0.8f)
             )
         }
     }

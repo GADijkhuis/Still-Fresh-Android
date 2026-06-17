@@ -19,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,9 +29,9 @@ import com.stillfresh.components.ExpiringFoodCard
 import com.stillfresh.components.FreshHackCard
 import com.stillfresh.components.HomeBottomBar
 import com.stillfresh.components.HomeHeader
-import com.stillfresh.components.RecipeCard
 import com.stillfresh.components.SectionHeader
 import com.stillfresh.config.SupabaseConfig
+import com.stillfresh.dataclasses.FoodTip
 import com.stillfresh.dataclasses.Product
 import com.stillfresh.handlers.CameraFileHandler
 import com.stillfresh.handlers.NotificationHandler
@@ -39,6 +40,10 @@ import com.stillfresh.theme.StillFreshTheme
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.jsonPrimitive
+import androidx.compose.foundation.lazy.items
+import com.stillfresh.handlers.FoodTipHandler
+import kotlin.random.Random
+import java.time.LocalDate
 
 class HomeActivity : ComponentActivity() {
 
@@ -209,6 +214,17 @@ fun HomeContent(
     modifier: Modifier = Modifier,
     products: List<Product>
 ) {
+    val context = LocalContext.current
+    var tips by remember {
+        mutableStateOf<List<FoodTip>>(emptyList())
+    }
+
+    LaunchedEffect(Unit) {
+        tips = FoodTipHandler
+            .getTips(context)
+            .shuffled(Random(LocalDate.now().dayOfYear))
+            .take(5)
+    }
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(20.dp),
@@ -243,8 +259,10 @@ fun HomeContent(
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(5) {
-                    FreshHackCard()
+                items(tips) { tip ->
+                    FreshHackCard(
+                        tip = tip
+                    )
                 }
             }
         }
@@ -268,22 +286,6 @@ fun HomeContent(
                             product = product
                         )
                     }
-            }
-        }
-
-        item {
-            SectionHeader(
-                title = "Last-Minute Recipes"
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(4) {
-                    RecipeCard()
-                }
             }
         }
     }
