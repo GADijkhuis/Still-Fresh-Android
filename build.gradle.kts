@@ -40,6 +40,35 @@ android {
             value = properties.getProperty("OPENROUTER_API_KEY") ?: ""
         )
 
+        buildConfigField(
+            type = "String",
+            name = "OPENFOODFACTS_API_URL",
+            value = properties.getProperty("OPENFOODFACTS_API_URL") ?: ""
+        )
+
+        buildConfigField(
+            type = "String",
+            name = "OPENFOODFACTS_SEARCH_URL",
+            value = properties.getProperty("OPENFOODFACTS_SEARCH_URL") ?: ""
+        )
+
+        buildConfigField(
+            type = "String",
+            name = "OPENFOODFACTS_API_USER",
+            value = properties.getProperty("OPENFOODFACTS_API_USER") ?: ""
+        )
+
+        buildConfigField(
+            type = "String",
+            name = "OPENFOODFACTS_API_PASS",
+            value = properties.getProperty("OPENFOODFACTS_API_PASS") ?: ""
+        )
+
+        buildConfigField(
+            type = "String",
+            name = "OPENFOODFACTS_API_MAIL",
+            value = properties.getProperty("OPENFOODFACTS_API_MAIL") ?: ""
+        )
     }
 
     compileOptions {
@@ -65,6 +94,7 @@ dependencies {
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.github.jan-tennert.supabase:auth-kt")
     implementation("io.github.jan-tennert.supabase:realtime-kt")
+    implementation("io.github.jan-tennert.supabase:storage-kt")
 
     implementation("io.ktor:ktor-client-android:3.5.0")
     implementation("io.ktor:ktor-client-auth:3.5.0")
@@ -79,6 +109,8 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+    implementation("org.mindrot:jbcrypt:0.4")
+    implementation("io.coil-kt:coil-compose:2.6.0")
 
     implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
     implementation("com.google.mlkit:barcode-scanning:17.3.0")
@@ -86,6 +118,9 @@ dependencies {
     implementation("androidx.camera:camera-camera2:1.6.1")
     implementation("androidx.camera:camera-lifecycle:1.6.1")
     implementation("androidx.camera:camera-view:1.6.1")
+
+    implementation("io.coil-kt.coil3:coil-compose:3.4.0")
+    implementation("io.coil-kt.coil3:coil-network-okhttp:3.4.0")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
