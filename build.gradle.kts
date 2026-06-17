@@ -34,6 +34,12 @@ android {
             value = properties.getProperty("SUPABASE_API_KEY") ?: ""
         )
 
+        buildConfigField(
+            type = "String",
+            name = "OPENROUTER_API_KEY",
+            value = properties.getProperty("OPENROUTER_API_KEY") ?: ""
+        )
+
     }
 
     compileOptions {

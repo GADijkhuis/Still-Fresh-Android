@@ -37,9 +37,14 @@ import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.stillfresh.components.StillFreshButton
 import com.stillfresh.components.StillFreshTextField
+import com.stillfresh.config.SupabaseConfig
 import com.stillfresh.handlers.ScannedProduct
 import com.stillfresh.handlers.VisionHandler
+import com.stillfresh.repository.ProductRepository
 import com.stillfresh.theme.StillFreshTheme
+import com.stillfresh.utils.ExpirationHelper
+import com.stillfresh.utils.ProductWithExpiration
+import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.launch
 
 class ScanReceiptActivity : ComponentActivity() {
@@ -68,6 +73,8 @@ class ScanReceiptActivity : ComponentActivity() {
                 var products by remember { mutableStateOf<List<ScannedProduct>>(emptyList()) }
                 var checkedProducts by remember { mutableStateOf<Set<String>>(emptySet()) }
                 var errorMessage by remember { mutableStateOf<String?>(null) }
+                var isProcessingAI by remember { mutableStateOf(false) }
+                var productsWithExpiration by remember { mutableStateOf<List<ProductWithExpiration>?>(null) }
 
                 LaunchedEffect(Unit) {
                     lifecycleScope.launch {
@@ -90,6 +97,8 @@ class ScanReceiptActivity : ComponentActivity() {
                     products = products,
                     checkedProducts = checkedProducts,
                     errorMessage = errorMessage,
+                    isProcessingAI = isProcessingAI,
+                    productsWithExpiration = productsWithExpiration,
                     onToggleProduct = { name ->
                         checkedProducts = if (checkedProducts.contains(name)) {
                             checkedProducts - name
@@ -113,10 +122,47 @@ class ScanReceiptActivity : ComponentActivity() {
                         checkedProducts = checkedProducts + new.name
                     },
                     onConfirm = {
-                        val selected = products.filter { checkedProducts.contains(it.name) }
-                        Toast.makeText(this@ScanReceiptActivity, "${selected.size} products added", Toast.LENGTH_SHORT).show()
-                        finish()
+                        lifecycleScope.launch {
+                            try {
+                                isProcessingAI = true
+                                val selected = products.filter { checkedProducts.contains(it.name) }
+                                
+                                // Call AI to get expiration dates
+                                val withExpiration = ExpirationHelper.addExpirationDates(selected)
+                                productsWithExpiration = withExpiration
+                                
+                                // Save to database
+                                val user = SupabaseConfig.client.auth.currentUserOrNull()
+                                if (user != null) {
+                                    val result = ProductRepository.insertProductsWithExpiration(
+                                        withExpiration,
+                                        user.id
+                                    )
+                                    
+                                    result.fold(
+                                        onSuccess = { savedProducts ->
+                                            println("✅ Saved ${savedProducts.size} products to database")
+                                        },
+                                        onFailure = { error ->
+                                            println("⚠️ Database save failed: ${error.message}")
+                                            error.printStackTrace()
+                                        }
+                                    )
+                                }
+                                
+                            } catch (e: Exception) {
+                                Toast.makeText(
+                                    this@ScanReceiptActivity,
+                                    "Error: ${e.message}",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                e.printStackTrace()
+                            } finally {
+                                isProcessingAI = false
+                            }
+                        }
                     },
+                    onFinish = { finish() },
                     onCancel = { finish() }
                 )
             }
@@ -131,11 +177,14 @@ fun ScanReceiptScreen(
     products: List<ScannedProduct>,
     checkedProducts: Set<String>,
     errorMessage: String?,
+    isProcessingAI: Boolean,
+    productsWithExpiration: List<ProductWithExpiration>?,
     onToggleProduct: (String) -> Unit,
     onEditProduct: (ScannedProduct, ScannedProduct) -> Unit,
     onDeleteProduct: (ScannedProduct) -> Unit,
     onAddProduct: (ScannedProduct) -> Unit,
     onConfirm: () -> Unit,
+    onFinish: () -> Unit,
     onCancel: () -> Unit
 ) {
     val teal = Color(0xFF70B9BE)
@@ -203,6 +252,156 @@ fun ScanReceiptScreen(
                             Spacer(modifier = Modifier.height(12.dp))
                             Text("Scanning receipt...", color = Color.Gray, fontSize = 14.sp)
                         }
+                    }
+                }
+                
+                isProcessingAI -> {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator(color = teal)
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text("Getting expiration dates from AI...", color = Color.Gray, fontSize = 14.sp)
+                        }
+                    }
+                }
+                
+                productsWithExpiration != null -> {
+                    // Show results with expiration dates
+                    val foodItems = productsWithExpiration.filter { it.isFood }
+                    val nonFoodItems = productsWithExpiration.filter { !it.isFood }
+                    
+                    Text(
+                        text = "✅ Analysis Complete!",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = teal,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    
+                    if (foodItems.isNotEmpty()) {
+                        Text(
+                            text = "${foodItems.size} food items saved with expiration dates:",
+                            fontSize = 14.sp,
+                            color = darkText,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+                    }
+                    
+                    if (nonFoodItems.isNotEmpty()) {
+                        Text(
+                            text = "${nonFoodItems.size} non-food items detected (not saved):",
+                            fontSize = 14.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+                    }
+                    
+                    productsWithExpiration.forEach { product ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 6.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = when {
+                                    !product.isFood -> Color(0xFFF5F5F5)
+                                    product.isExpired -> Color(0xFFFFEBEE)
+                                    product.isExpiringSoon -> Color(0xFFFFF3E0)
+                                    else -> Color(0xFFE8F5E9)
+                                }
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = product.name,
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = darkText
+                                        )
+                                        if (product.quantity > 1) {
+                                            Text(
+                                                text = "Qty: ${product.quantity}",
+                                                fontSize = 12.sp,
+                                                color = Color.Gray
+                                            )
+                                        }
+                                    }
+                                    
+                                    // Status badge
+                                    Surface(
+                                        color = when {
+                                            !product.isFood -> Color(0xFF9E9E9E)
+                                            product.isExpired -> Color(0xFFEF5350)
+                                            product.isExpiringSoon -> Color(0xFFFF9800)
+                                            else -> Color(0xFF66BB6A)
+                                        },
+                                        shape = RoundedCornerShape(12.dp)
+                                    ) {
+                                        Text(
+                                            text = when {
+                                                !product.isFood -> "NOT FOOD"
+                                                product.isExpired -> "EXPIRED"
+                                                product.daysUntilExpiration == 0 -> "TODAY"
+                                                product.daysUntilExpiration!! <= 3 -> "${product.daysUntilExpiration}d"
+                                                else -> "${product.daysUntilExpiration}d"
+                                            },
+                                            color = Color.White,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                }
+                                
+                                if (product.isFood) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    
+                                    Text(
+                                        text = "📅 ${product.getFormattedExpirationDate()}",
+                                        fontSize = 13.sp,
+                                        color = Color.Gray
+                                    )
+                                    Text(
+                                        text = product.getExpirationMessage(),
+                                        fontSize = 13.sp,
+                                        color = when {
+                                            product.isExpired -> Color(0xFFD32F2F)
+                                            product.isExpiringSoon -> Color(0xFFF57C00)
+                                            else -> Color(0xFF388E3C)
+                                        },
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                } else {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "This item was not saved to your pantry",
+                                        fontSize = 13.sp,
+                                        color = Color.Gray,
+                                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    if (nonFoodItems.isNotEmpty()) {
+                        Text(
+                            text = "💡 Tip: Non-food items are automatically filtered out",
+                            fontSize = 12.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
                     }
                 }
 
@@ -313,15 +512,24 @@ fun ScanReceiptScreen(
         }
 
         // Confirm button
-        if (!isScanning) {
+        if (!isScanning && !isProcessingAI) {
             Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
-                StillFreshButton(
-                    text = if (checkedProducts.isEmpty()) "No products selected" else "Add ${checkedProducts.size} products",
-                    onClick = onConfirm,
-                    enabled = checkedProducts.isNotEmpty(),
-                    containerColor = teal,
-                    contentColor = Color.White
-                )
+                if (productsWithExpiration != null) {
+                    StillFreshButton(
+                        text = "Done",
+                        onClick = onFinish,
+                        containerColor = teal,
+                        contentColor = Color.White
+                    )
+                } else {
+                    StillFreshButton(
+                        text = if (checkedProducts.isEmpty()) "No products selected" else "Add ${checkedProducts.size} products",
+                        onClick = onConfirm,
+                        enabled = checkedProducts.isNotEmpty(),
+                        containerColor = teal,
+                        contentColor = Color.White
+                    )
+                }
             }
         }
     }
