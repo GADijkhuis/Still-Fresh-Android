@@ -23,16 +23,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.stillfresh.components.ExpiringFoodCard
 import com.stillfresh.components.FreshHackCard
 import com.stillfresh.components.HomeBottomBar
 import com.stillfresh.components.HomeHeader
 import com.stillfresh.components.RecipeCard
 import com.stillfresh.components.SectionHeader
-import com.stillfresh.components.InventoryView
-import androidx.lifecycle.lifecycleScope
-import com.stillfresh.components.HomeBottomBar
-import com.stillfresh.components.HomeHeader
 import com.stillfresh.config.SupabaseConfig
 import com.stillfresh.handlers.CameraFileHandler
 import com.stillfresh.handlers.NotificationHandler
