@@ -3,7 +3,7 @@
     <domain-config>
         <domain includeSubdomains="true">world.openfoodfacts.org</domain>
         <pin-set expiration="2026-07-21">
-            <pin digest="SHA-256">PIN</pin>
+            <pin digest="SHA-256">FFNauwpC0DvOqbrqRbulllJvbwSwckneVJwB3BSEQ80</pin>
             <!--Tool for getting SHA-256 pins: https://approov.io/tools/static-pinning/-->
         </pin-set>
     </domain-config>

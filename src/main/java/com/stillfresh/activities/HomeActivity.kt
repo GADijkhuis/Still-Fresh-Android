@@ -31,6 +31,7 @@ import com.stillfresh.components.HomeHeader
 import com.stillfresh.components.RecipeCard
 import com.stillfresh.components.SectionHeader
 import com.stillfresh.config.SupabaseConfig
+import com.stillfresh.dataclasses.Product
 import com.stillfresh.handlers.CameraFileHandler
 import com.stillfresh.handlers.NotificationHandler
 import com.stillfresh.handlers.ProductHandler
@@ -130,6 +131,19 @@ fun HomeScreen(
     var selectedTab by remember { mutableIntStateOf(0) }
     var showAddSheet by remember { mutableStateOf(false) }
 
+    val user = SupabaseConfig.client.auth.currentUserOrNull()
+    val userId = user?.id ?: ""
+
+    var products by remember {
+        mutableStateOf<List<Product>>(emptyList())
+    }
+
+    LaunchedEffect(Unit) {
+        if (userId.isNotEmpty()) {
+            products = ProductHandler.getProducts(userId)
+        }
+    }
+
     Scaffold(
         modifier = Modifier.systemBarsPadding(),
         containerColor = Color(0xFFF2F2F7),
@@ -162,7 +176,8 @@ fun HomeScreen(
             }
             else -> {
                 HomeContent(
-                    modifier = Modifier.padding(paddingValues)
+                    modifier = Modifier.padding(paddingValues),
+                    products = products
                 )
             }
         }
@@ -191,7 +206,8 @@ fun HomeScreen(
 
 @Composable
 fun HomeContent(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    products: List<Product>
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -243,9 +259,15 @@ fun HomeContent(
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                repeat(3) {
-                    ExpiringFoodCard()
-                }
+                products
+                    .sortedBy { it.expiration_date }
+                    .take(3)
+                    .forEach { product ->
+
+                        ExpiringFoodCard(
+                            product = product
+                        )
+                    }
             }
         }
 
