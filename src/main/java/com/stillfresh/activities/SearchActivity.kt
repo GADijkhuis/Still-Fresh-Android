@@ -1,6 +1,7 @@
 package com.stillfresh.activities
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,13 +21,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.TextUnitType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
@@ -34,10 +34,15 @@ import androidx.lifecycle.viewModelScope
 import com.stillfresh.components.StillFreshIconButton
 import com.stillfresh.components.StillFreshProduct
 import com.stillfresh.components.StillFreshTextFieldInvertedColors
+import com.stillfresh.config.SupabaseConfig
+import com.stillfresh.dataclasses.Product
 import com.stillfresh.dataclasses.openfoodfacts.OpenFoodFactsProduct
 import com.stillfresh.enums.SearchLoadingState
 import com.stillfresh.handlers.OpenFoodFactsHandler
+import com.stillfresh.handlers.ProductHandler
+import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 
 object SearchActivity : ViewModel() {
@@ -46,6 +51,11 @@ object SearchActivity : ViewModel() {
         var searchLoadingState by remember { mutableStateOf(SearchLoadingState.NOT_SEARCHED) }
         var searchValue by remember { mutableStateOf("") }
         var searchResults: Array<OpenFoodFactsProduct> by remember { mutableStateOf(arrayOf()) }
+        
+        val scope = rememberCoroutineScope()
+        val context = LocalContext.current
+        val user = SupabaseConfig.client.auth.currentUserOrNull()
+        val userId = user?.id ?: ""
 
         fun updateSearchResults() {
             if (searchValue.replace(" ","") == "") {
@@ -137,9 +147,27 @@ object SearchActivity : ViewModel() {
                     }
                     SearchLoadingState.SEARCHING_COMPLETE -> {
                         searchResults.iterator().forEach {
-                            Log.i("Products", it.toString())
-
-                            StillFreshProduct(product = it)
+                            StillFreshProduct(
+                                product = it,
+                                onAddClick = {
+                                    val name = it.product_name ?: it.product_type ?: "Unknown Product"
+                                    scope.launch {
+                                        try {
+                                            val productToSave = Product(
+                                                user_id = userId,
+                                                name = name,
+                                                quantity = 1,
+                                                purchase_date = LocalDate.now().toString(),
+                                                expiration_date = LocalDate.now().plusDays(7).toString()
+                                            )
+                                            ProductHandler.addProduct(productToSave)
+                                            Toast.makeText(context, "$name added to inventory", Toast.LENGTH_SHORT).show()
+                                        } catch (e: Exception) {
+                                            Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                                        }
+                                    }
+                                }
+                            )
                         }
                     }
                     else -> {

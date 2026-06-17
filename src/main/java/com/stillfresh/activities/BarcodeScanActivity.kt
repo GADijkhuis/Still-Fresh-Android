@@ -1,6 +1,7 @@
 package com.stillfresh.activities
 
 import android.Manifest
+import android.app.DatePickerDialog
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -14,9 +15,12 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,15 +29,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
+import com.stillfresh.config.SupabaseConfig
+import com.stillfresh.dataclasses.Product
+import com.stillfresh.handlers.OpenFoodFactsHandler
+import com.stillfresh.handlers.ProductHandler
 import com.stillfresh.theme.StillFreshTheme
+import io.github.jan.supabase.auth.auth
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.util.Calendar
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -61,13 +75,35 @@ class BarcodeScanActivity : ComponentActivity() {
             requestPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
 
+        val user = SupabaseConfig.client.auth.currentUserOrNull()
+        if (user == null) {
+            finish()
+            return
+        }
+        val userId = user.id
+
         setContent {
             StillFreshTheme {
+                val scope = rememberCoroutineScope()
                 BarcodeScanScreen(
-                    onBarcodeDetected = { barcode ->
-                        // TODO: look up product by barcode (e.g. Open Food Facts API)
-                        Toast.makeText(this, "Barcode: $barcode", Toast.LENGTH_LONG).show()
-                        finish()
+                    onConfirm = { name ->
+                        scope.launch {
+                            try {
+                                val productToSave = Product(
+                                    user_id = userId,
+                                    name = name,
+                                    quantity = 1,
+                                    purchase_date = LocalDate.now().toString(),
+                                    expiration_date = LocalDate.now().plusDays(7).toString()
+                                )
+                                ProductHandler.addProduct(productToSave)
+                                Toast.makeText(this@BarcodeScanActivity, "$name added", Toast.LENGTH_SHORT).show()
+                                finish()
+                            } catch (e: Exception) {
+                                Toast.makeText(this@BarcodeScanActivity, "Error saving: ${e.message}", Toast.LENGTH_LONG).show()
+                                // Allow re-scanning if error
+                            }
+                        }
                     },
                     onCancel = { finish() },
                     cameraExecutor = cameraExecutor
@@ -82,17 +118,24 @@ class BarcodeScanActivity : ComponentActivity() {
     }
 }
 
+data class BarcodeProduct(
+    val name: String,
+    val quantity: Int,
+    val expirationDate: String
+)
+
 @Composable
 fun BarcodeScanScreen(
-    onBarcodeDetected: (String) -> Unit,
+    onConfirm: (String) -> Unit,
     onCancel: () -> Unit,
     cameraExecutor: ExecutorService
 ) {
     val teal = Color(0xFF70B9BE)
-    val darkText = Color(0xFF2D3436)
     val context = LocalContext.current
+
     var scannedValue by remember { mutableStateOf<String?>(null) }
     var hasScanned by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -240,10 +283,25 @@ fun BarcodeScanScreen(
                 .offset(y = 140.dp)
         )
 
-        // Scanned result
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = teal)
+            }
+        }
+
+        // Scanned result handling
         scannedValue?.let { value ->
             LaunchedEffect(value) {
-                onBarcodeDetected(value)
+                isLoading = true
+                val result = OpenFoodFactsHandler.getProductById(value)
+                val name = result?.product?.product_name ?: "Unknown Product"
+                isLoading = false
+                onConfirm(name)
             }
         }
     }

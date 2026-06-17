@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.stillfresh.components.HomeBottomBar
 import com.stillfresh.components.HomeHeader
+import com.stillfresh.components.InventoryView
 import com.stillfresh.config.SupabaseConfig
 import com.stillfresh.handlers.CameraFileHandler
 import com.stillfresh.theme.StillFreshTheme
@@ -69,6 +70,9 @@ class HomeActivity : ComponentActivity() {
                     onScanBarcode = {
                         startActivity(Intent(this@HomeActivity, BarcodeScanActivity::class.java))
                     },
+                    onInventoryClick = {
+                        startActivity(Intent(this@HomeActivity, InventoryActivity::class.java))
+                    },
                     onProfileClick = {
                         startActivity(Intent(this@HomeActivity, AccountActivity::class.java))
                     }
@@ -103,6 +107,7 @@ fun HomeScreen(
     onScanReceipt: () -> Unit = {},
     onManualEntry: () -> Unit = {},
     onScanBarcode: () -> Unit = {},
+    onInventoryClick: () -> Unit = {},
     onProfileClick: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -121,11 +126,7 @@ fun HomeScreen(
             HomeBottomBar(
                 selectedTab = selectedTab,
                 onTabSelected = { index ->
-                    if (index == 3) {
-                        onProfileClick()
-                    } else {
-                        selectedTab = index
-                    }
+                    selectedTab = index
                 },
                 onAddClick = { showAddSheet = true },
                 username = username
@@ -135,6 +136,15 @@ fun HomeScreen(
         when (selectedTab) {
             1 -> {
                 SearchActivity.SearchView()
+            }
+            2 -> {
+                val user = SupabaseConfig.client.auth.currentUserOrNull()
+                if (user != null) {
+                    InventoryView(userId = user.id)
+                }
+            }
+            3 -> {
+                onProfileClick()
             }
             else -> {
                 Box(

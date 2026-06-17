@@ -3,7 +3,6 @@ package com.stillfresh.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -12,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,16 +23,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.stillfresh.dataclasses.openfoodfacts.OpenFoodFactsProduct
-import io.github.jan.supabase.realtime.Column
 
 @Composable
 fun StillFreshProduct(
-    product: OpenFoodFactsProduct
+    product: OpenFoodFactsProduct,
+    onAddClick: () -> Unit = {}
 ) {
     val productName = product.product_name ?: product.product_type ?: "Unknown product"
 
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth()
@@ -55,12 +57,17 @@ fun StillFreshProduct(
             Column (
                 modifier = Modifier.weight(1f)
             ) {
-                Text(productName)
+                Text(
+                    text = productName,
+                    fontSize = 15.sp,
+                    color = Color(0xFF2D3436)
+                )
 
                 if (product.brands != null) {
                     Text(
                         text = product.brands,
-                        fontSize = 12.sp
+                        fontSize = 12.sp,
+                        color = Color.Gray
                     )
                 }
             }
@@ -68,7 +75,7 @@ fun StillFreshProduct(
             StillFreshIconButton(
                 icon = Icons.Filled.Add,
                 contentDescription = productName,
-                onClick = { /*Add to inventory*/ }
+                onClick = onAddClick
             )
         }
     }
