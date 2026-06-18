@@ -1,11 +1,14 @@
 package com.stillfresh.activities
 
+import android.app.DatePickerDialog
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,6 +16,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
@@ -20,30 +24,67 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.stillfresh.components.StillFreshButton
+import com.stillfresh.config.SupabaseConfig
+import com.stillfresh.dataclasses.Product
+import com.stillfresh.handlers.NotificationHandler
+import com.stillfresh.handlers.ProductHandler
 import com.stillfresh.theme.StillFreshTheme
+import io.github.jan.supabase.auth.auth
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.util.Calendar
 
 data class ManualProduct(
     val name: String,
-    val quantity: Int = 1
+    val quantity: Int = 1,
+    val expirationDate: String
 )
 
 class ManualEntryActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        
+        val user = SupabaseConfig.client.auth.currentUserOrNull()
+        if (user == null) {
+            finish()
+            return
+        }
+        val userId = user.id
+
         setContent {
             StillFreshTheme {
+                val scope = rememberCoroutineScope()
                 ManualEntryScreen(
                     onConfirm = { products ->
-                        // TODO: save products to database
-                        Toast.makeText(this, "${products.size} products added", Toast.LENGTH_SHORT).show()
-                        finish()
+                        scope.launch {
+                            try {
+                                val productsToSave = products.map {
+                                    Product(
+                                        user_id = userId,
+                                        name = it.name,
+                                        quantity = it.quantity,
+                                        purchase_date = LocalDate.now().toString(),
+                                        expiration_date = it.expirationDate
+                                    )
+                                }
+                                ProductHandler.addProducts(productsToSave)
+                                productsToSave.forEach { product ->
+                                    NotificationHandler.scheduleExpirationNotification(this@ManualEntryActivity, product.name, product.expiration_date)
+                                }
+                                Toast.makeText(this@ManualEntryActivity, "${products.size} products added", Toast.LENGTH_SHORT).show()
+                                finish()
+                            } catch (e: Exception) {
+                                Toast.makeText(this@ManualEntryActivity, "Error saving products: ${e.message}", Toast.LENGTH_LONG).show()
+                            }
+                        }
                     },
                     onCancel = { finish() }
                 )
@@ -59,10 +100,25 @@ fun ManualEntryScreen(
 ) {
     val teal = Color(0xFF70B9BE)
     val darkText = Color(0xFF2D3436)
+    val context = LocalContext.current
 
     var productName by remember { mutableStateOf("") }
     var quantity by remember { mutableStateOf("1") }
+    var expirationDate by remember { mutableStateOf(LocalDate.now().plusDays(7).toString()) }
     var products by remember { mutableStateOf<List<ManualProduct>>(emptyList()) }
+
+    // Date picker state
+    val calendar = Calendar.getInstance()
+    val datePickerDialog = DatePickerDialog(
+        context,
+        { _, year, month, dayOfMonth ->
+            val selectedDate = LocalDate.of(year, month + 1, dayOfMonth)
+            expirationDate = selectedDate.toString()
+        },
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH),
+        calendar.get(Calendar.DAY_OF_MONTH)
+    )
 
     Column(
         modifier = Modifier
@@ -147,28 +203,56 @@ fun ManualEntryScreen(
                     )
                 )
 
-                Button(
-                    onClick = {
-                        if (productName.isNotBlank()) {
-                            products = products + ManualProduct(
-                                name = productName.trim(),
-                                quantity = quantity.toIntOrNull() ?: 1
-                            )
-                            productName = ""
-                            quantity = "1"
-                        }
-                    },
-                    enabled = productName.isNotBlank(),
+                // Expiration Date Field (Clickable)
+                OutlinedTextField(
+                    value = expirationDate,
+                    onValueChange = { },
+                    label = { Text("Expires") },
                     modifier = Modifier
                         .weight(1f)
-                        .height(56.dp),
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) { datePickerDialog.show() },
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = teal)
-                ) {
-                    Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Add to list")
-                }
+                    readOnly = true,
+                    enabled = false,
+                    trailingIcon = {
+                        Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = teal)
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        disabledBorderColor = Color(0xFFCCCCCC),
+                        disabledLabelColor = teal,
+                        disabledTextColor = darkText
+                    )
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Button(
+                onClick = {
+                    if (productName.isNotBlank()) {
+                        products = products + ManualProduct(
+                            name = productName.trim(),
+                            quantity = quantity.toIntOrNull() ?: 1,
+                            expirationDate = expirationDate
+                        )
+                        productName = ""
+                        quantity = "1"
+                        // Keep current expiration date as default for next item
+                    }
+                },
+                enabled = productName.isNotBlank(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = teal)
+            ) {
+                Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Add to list")
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -200,9 +284,17 @@ fun ManualEntryScreen(
                                 fontWeight = FontWeight.Medium,
                                 color = darkText
                             )
-                            if (product.quantity > 1) {
+                            Row {
+                                if (product.quantity > 1) {
+                                    Text(
+                                        text = "Qty: ${product.quantity}",
+                                        fontSize = 12.sp,
+                                        color = Color.Gray
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                }
                                 Text(
-                                    text = "Qty: ${product.quantity}",
+                                    text = "Exp: ${product.expirationDate}",
                                     fontSize = 12.sp,
                                     color = Color.Gray
                                 )

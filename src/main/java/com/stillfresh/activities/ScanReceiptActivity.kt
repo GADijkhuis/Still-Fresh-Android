@@ -1,5 +1,6 @@
 package com.stillfresh.activities
 
+import android.app.DatePickerDialog
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.os.Build
@@ -11,6 +12,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +21,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -28,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
@@ -37,10 +42,18 @@ import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.stillfresh.components.StillFreshButton
 import com.stillfresh.components.StillFreshTextField
+import com.stillfresh.config.SupabaseConfig
+import com.stillfresh.dataclasses.Product
+import com.stillfresh.handlers.NotificationHandler
+import com.stillfresh.handlers.ProductHandler
 import com.stillfresh.handlers.ScannedProduct
 import com.stillfresh.handlers.VisionHandler
+import com.stillfresh.handlers.FoodAIHandler
 import com.stillfresh.theme.StillFreshTheme
+import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.util.Calendar
 
 class ScanReceiptActivity : ComponentActivity() {
 
@@ -74,8 +87,20 @@ class ScanReceiptActivity : ComponentActivity() {
                         try {
                             val rawText = VisionHandler.recognizeText(bitmap)
                             val parsed = VisionHandler.parseReceiptText(rawText)
-                            products = parsed
-                            checkedProducts = parsed.map { it.name }.toSet()
+
+                            // Use AI to classify items and estimate expiry
+                            val itemNames = parsed.map { it.name }
+                            try {
+                                val classifications = FoodAIHandler.classifyAndEstimateExpiry(itemNames)
+                                val classified = VisionHandler.applyAIClassification(parsed, classifications)
+                                products = classified
+                                checkedProducts = classified.filter { it.isFood }.map { it.name }.toSet()
+                            } catch (aiError: Exception) {
+                                // AI failed — use parsed items with defaults, show warning
+                                products = parsed
+                                checkedProducts = parsed.map { it.name }.toSet()
+                                errorMessage = "AI analysis failed: ${aiError.message?.take(100)}"
+                            }
                         } catch (e: Exception) {
                             errorMessage = e.message ?: "Failed to scan receipt"
                         } finally {
@@ -83,6 +108,9 @@ class ScanReceiptActivity : ComponentActivity() {
                         }
                     }
                 }
+
+                val user = SupabaseConfig.client.auth.currentUserOrNull()
+                val userId = user?.id ?: ""
 
                 ScanReceiptScreen(
                     bitmap = bitmap,
@@ -113,9 +141,29 @@ class ScanReceiptActivity : ComponentActivity() {
                         checkedProducts = checkedProducts + new.name
                     },
                     onConfirm = {
-                        val selected = products.filter { checkedProducts.contains(it.name) }
-                        Toast.makeText(this@ScanReceiptActivity, "${selected.size} products added", Toast.LENGTH_SHORT).show()
-                        finish()
+                        // Only save food items that are checked
+                        val selected = products.filter { checkedProducts.contains(it.name) && it.isFood }
+                        lifecycleScope.launch {
+                            try {
+                                val productsToSave = selected.map {
+                                    Product(
+                                        user_id = userId,
+                                        name = it.name,
+                                        quantity = it.quantity,
+                                        purchase_date = LocalDate.now().toString(),
+                                        expiration_date = it.expirationDate
+                                    )
+                                }
+                                ProductHandler.addProducts(productsToSave)
+                                productsToSave.forEach { product ->
+                                    NotificationHandler.scheduleExpirationNotification(this@ScanReceiptActivity, product.name, product.expiration_date)
+                                }
+                                Toast.makeText(this@ScanReceiptActivity, "${selected.size} products added", Toast.LENGTH_SHORT).show()
+                                finish()
+                            } catch (e: Exception) {
+                                Toast.makeText(this@ScanReceiptActivity, "Error saving products: ${e.message}", Toast.LENGTH_LONG).show()
+                            }
+                        }
                     },
                     onCancel = { finish() }
                 )
@@ -201,7 +249,7 @@ fun ScanReceiptScreen(
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             CircularProgressIndicator(color = teal)
                             Spacer(modifier = Modifier.height(12.dp))
-                            Text("Scanning receipt...", color = Color.Gray, fontSize = 14.sp)
+                            Text("Scanning receipt & analyzing items...", color = Color.Gray, fontSize = 14.sp)
                         }
                     }
                 }
@@ -269,12 +317,35 @@ fun ScanReceiptScreen(
                                     fontWeight = FontWeight.Medium,
                                     color = darkText
                                 )
-                                if (product.quantity > 1) {
-                                    Text(
-                                        text = "Qty: ${product.quantity}",
-                                        fontSize = 12.sp,
-                                        color = Color.Gray
-                                    )
+                                Row {
+                                    if (product.quantity > 1) {
+                                        Text(
+                                            text = "Qty: ${product.quantity}",
+                                            fontSize = 12.sp,
+                                            color = Color.Gray
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                    }
+                                    if (!product.isFood) {
+                                        Text(
+                                            text = "Not food",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = Color(0xFFFF9800)
+                                        )
+                                    } else if (product.expiryDays > 0) {
+                                        Text(
+                                            text = "Expires in ~${product.expiryDays} days",
+                                            fontSize = 12.sp,
+                                            color = Color(0xFF70B9BE)
+                                        )
+                                    } else {
+                                        Text(
+                                            text = "Expiry unknown",
+                                            fontSize = 12.sp,
+                                            color = Color.Gray
+                                        )
+                                    }
                                 }
                             }
 
@@ -316,9 +387,12 @@ fun ScanReceiptScreen(
         if (!isScanning) {
             Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
                 StillFreshButton(
-                    text = if (checkedProducts.isEmpty()) "No products selected" else "Add ${checkedProducts.size} products",
+                    text = run {
+                        val foodCount = products.count { checkedProducts.contains(it.name) && it.isFood }
+                        if (foodCount == 0) "No food products selected" else "Add $foodCount food products"
+                    },
                     onClick = onConfirm,
-                    enabled = checkedProducts.isNotEmpty(),
+                    enabled = products.any { checkedProducts.contains(it.name) && it.isFood },
                     containerColor = teal,
                     contentColor = Color.White
                 )
@@ -366,7 +440,21 @@ fun ProductEditDialog(
 ) {
     var name by remember { mutableStateOf(product.name) }
     var quantity by remember { mutableStateOf(product.quantity.toString()) }
+    var expirationDate by remember { mutableStateOf(product.expirationDate) }
     val teal = Color(0xFF70B9BE)
+    val context = LocalContext.current
+
+    val calendar = Calendar.getInstance()
+    val datePickerDialog = DatePickerDialog(
+        context,
+        { _, year, month, dayOfMonth ->
+            val selectedDate = LocalDate.of(year, month + 1, dayOfMonth)
+            expirationDate = selectedDate.toString()
+        },
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH),
+        calendar.get(Calendar.DAY_OF_MONTH)
+    )
 
     Dialog(onDismissRequest = onDismiss) {
         Column(
@@ -418,6 +506,31 @@ fun ProductEditDialog(
                 )
             )
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = expirationDate,
+                onValueChange = { },
+                label = { Text("Expiration Date") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) { datePickerDialog.show() },
+                shape = RoundedCornerShape(12.dp),
+                readOnly = true,
+                enabled = false,
+                trailingIcon = {
+                    Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = teal)
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    disabledBorderColor = Color(0xFFCCCCCC),
+                    disabledLabelColor = teal,
+                    disabledTextColor = Color(0xFF2D3436)
+                )
+            )
+
             Spacer(modifier = Modifier.height(24.dp))
 
             Row(
@@ -435,7 +548,8 @@ fun ProductEditDialog(
                     onClick = {
                         onConfirm(ScannedProduct(
                             name = name.trim(),
-                            quantity = quantity.toIntOrNull() ?: 1
+                            quantity = quantity.toIntOrNull() ?: 1,
+                            expirationDate = expirationDate
                         ))
                     },
                     enabled = name.isNotBlank(),

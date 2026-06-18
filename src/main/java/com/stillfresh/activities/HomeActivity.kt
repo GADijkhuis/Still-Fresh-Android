@@ -19,12 +19,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.stillfresh.components.HomeBottomBar
 import com.stillfresh.components.HomeHeader
 import com.stillfresh.config.SupabaseConfig
 import com.stillfresh.handlers.CameraFileHandler
+import com.stillfresh.handlers.NotificationHandler
+import com.stillfresh.handlers.ProductHandler
 import com.stillfresh.theme.StillFreshTheme
 import io.github.jan.supabase.auth.auth
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.jsonPrimitive
 
 class HomeActivity : ComponentActivity() {
@@ -55,6 +59,16 @@ class HomeActivity : ComponentActivity() {
 
         val user = SupabaseConfig.client.auth.currentUserOrNull()
         val username = user?.userMetadata?.get("username")?.jsonPrimitive?.content ?: "User"
+        
+        // Schedule notifications for all products when home starts
+        user?.id?.let { userId ->
+            lifecycleScope.launch {
+                val products = ProductHandler.getProducts(userId)
+                products.forEach { product ->
+                    NotificationHandler.scheduleExpirationNotification(this@HomeActivity, product.name, product.expiration_date)
+                }
+            }
+        }
 
         setContent {
             StillFreshTheme {
@@ -121,11 +135,7 @@ fun HomeScreen(
             HomeBottomBar(
                 selectedTab = selectedTab,
                 onTabSelected = { index ->
-                    if (index == 3) {
-                        onProfileClick()
-                    } else {
-                        selectedTab = index
-                    }
+                    selectedTab = index
                 },
                 onAddClick = { showAddSheet = true },
                 username = username
@@ -135,6 +145,12 @@ fun HomeScreen(
         when (selectedTab) {
             1 -> {
                 SearchActivity.SearchView()
+            }
+            2 -> {
+                InventoryView.InventoryView(onBack = { selectedTab = 0 })
+            }
+            3 -> {
+                onProfileClick()
             }
             else -> {
                 Box(
