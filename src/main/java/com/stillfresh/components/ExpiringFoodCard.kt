@@ -95,12 +95,6 @@ fun ExpiringFoodCard(
                         Color(0xFFE57373)
                 )
             }
-
-            FilledIconButton(
-                onClick = {}
-            ) {
-                Text("→")
-            }
         }
     }
 }

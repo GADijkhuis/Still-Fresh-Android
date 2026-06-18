@@ -182,7 +182,8 @@ fun HomeScreen(
             else -> {
                 HomeContent(
                     modifier = Modifier.padding(paddingValues),
-                    products = products
+                    products = products,
+                    showInventory = { selectedTab = 2 }
                 )
             }
         }
@@ -212,7 +213,8 @@ fun HomeScreen(
 @Composable
 fun HomeContent(
     modifier: Modifier = Modifier,
-    products: List<Product>
+    products: List<Product>,
+    showInventory: () -> Unit = {}
 ) {
     val context = LocalContext.current
     var tips by remember {
@@ -230,22 +232,6 @@ fun HomeContent(
         contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        item {
-            Column {
-                Text(
-                    text = "Good Morning",
-                    color = Color.Gray
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = "StillFresh",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
 
         item {
             Text(
@@ -269,7 +255,8 @@ fun HomeContent(
 
         item {
             SectionHeader(
-                title = "Use It or Lose It"
+                title = "Use It or Lose It",
+                showInventory = showInventory
             )
 
             Spacer(modifier = Modifier.height(12.dp))
