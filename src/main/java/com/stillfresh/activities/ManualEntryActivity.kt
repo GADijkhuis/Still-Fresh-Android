@@ -52,6 +52,7 @@ class ManualEntryActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        
         val user = SupabaseConfig.client.auth.currentUserOrNull()
         if (user == null) {
             finish()

@@ -52,6 +52,11 @@ object SearchActivity : ViewModel() {
         var searchLoadingState by remember { mutableStateOf(SearchLoadingState.NOT_SEARCHED) }
         var searchValue by remember { mutableStateOf("") }
         var searchResults: Array<OpenFoodFactsProduct> by remember { mutableStateOf(arrayOf()) }
+        
+        val scope = rememberCoroutineScope()
+        val context = LocalContext.current
+        val user = SupabaseConfig.client.auth.currentUserOrNull()
+        val userId = user?.id ?: ""
 
         val scope = rememberCoroutineScope()
         val context = LocalContext.current

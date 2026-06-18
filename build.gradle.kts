@@ -63,6 +63,18 @@ android {
             name = "OPENFOODFACTS_API_MAIL",
             value = properties.getProperty("OPENFOODFACTS_API_MAIL") ?: ""
         )
+
+        buildConfigField(
+            type = "String",
+            name = "OPENROUTER_API_KEY",
+            value = properties.getProperty("OPENROUTER_API_KEY") ?: ""
+        )
+
+        buildConfigField(
+            type = "String",
+            name = "GEMINI_API_KEY",
+            value = properties.getProperty("GEMINI_API_KEY") ?: ""
+        )
     }
 
     compileOptions {

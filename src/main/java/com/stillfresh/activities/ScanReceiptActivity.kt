@@ -48,6 +48,7 @@ import com.stillfresh.handlers.NotificationHandler
 import com.stillfresh.handlers.ProductHandler
 import com.stillfresh.handlers.ScannedProduct
 import com.stillfresh.handlers.VisionHandler
+import com.stillfresh.handlers.FoodAIHandler
 import com.stillfresh.theme.StillFreshTheme
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.launch
@@ -86,8 +87,20 @@ class ScanReceiptActivity : ComponentActivity() {
                         try {
                             val rawText = VisionHandler.recognizeText(bitmap)
                             val parsed = VisionHandler.parseReceiptText(rawText)
-                            products = parsed
-                            checkedProducts = parsed.map { it.name }.toSet()
+
+                            // Use AI to classify items and estimate expiry
+                            val itemNames = parsed.map { it.name }
+                            try {
+                                val classifications = FoodAIHandler.classifyAndEstimateExpiry(itemNames)
+                                val classified = VisionHandler.applyAIClassification(parsed, classifications)
+                                products = classified
+                                checkedProducts = classified.filter { it.isFood }.map { it.name }.toSet()
+                            } catch (aiError: Exception) {
+                                // AI failed — use parsed items with defaults, show warning
+                                products = parsed
+                                checkedProducts = parsed.map { it.name }.toSet()
+                                errorMessage = "AI analysis failed: ${aiError.message?.take(100)}"
+                            }
                         } catch (e: Exception) {
                             errorMessage = e.message ?: "Failed to scan receipt"
                         } finally {
@@ -129,6 +142,8 @@ class ScanReceiptActivity : ComponentActivity() {
                     },
                     onConfirm = {
                         val selected = products.filter { checkedProducts.contains(it.name) }
+                        // Only save food items that are checked
+                        val selected = products.filter { checkedProducts.contains(it.name) && it.isFood }
                         lifecycleScope.launch {
                             try {
                                 val productsToSave = selected.map {
@@ -235,7 +250,7 @@ fun ScanReceiptScreen(
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             CircularProgressIndicator(color = teal)
                             Spacer(modifier = Modifier.height(12.dp))
-                            Text("Scanning receipt...", color = Color.Gray, fontSize = 14.sp)
+                            Text("Scanning receipt & analyzing items...", color = Color.Gray, fontSize = 14.sp)
                         }
                     }
                 }
@@ -317,6 +332,26 @@ fun ScanReceiptScreen(
                                         fontSize = 12.sp,
                                         color = Color.Gray
                                     )
+                                    if (!product.isFood) {
+                                        Text(
+                                            text = "Not food",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = Color(0xFFFF9800)
+                                        )
+                                    } else if (product.expiryDays > 0) {
+                                        Text(
+                                            text = "Expires in ~${product.expiryDays} days",
+                                            fontSize = 12.sp,
+                                            color = Color(0xFF70B9BE)
+                                        )
+                                    } else {
+                                        Text(
+                                            text = "Expiry unknown",
+                                            fontSize = 12.sp,
+                                            color = Color.Gray
+                                        )
+                                    }
                                 }
                             }
 
@@ -358,9 +393,12 @@ fun ScanReceiptScreen(
         if (!isScanning) {
             Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
                 StillFreshButton(
-                    text = if (checkedProducts.isEmpty()) "No products selected" else "Add ${checkedProducts.size} products",
+                    text = run {
+                        val foodCount = products.count { checkedProducts.contains(it.name) && it.isFood }
+                        if (foodCount == 0) "No food products selected" else "Add $foodCount food products"
+                    },
                     onClick = onConfirm,
-                    enabled = checkedProducts.isNotEmpty(),
+                    enabled = products.any { checkedProducts.contains(it.name) && it.isFood },
                     containerColor = teal,
                     contentColor = Color.White
                 )

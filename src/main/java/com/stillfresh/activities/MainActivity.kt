@@ -61,6 +61,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        
+        NotificationHandler.createNotificationChannel(this)
+        checkNotificationPermission()
 
         NotificationHandler.createNotificationChannel(this)
         checkNotificationPermission()

@@ -73,6 +73,16 @@ class HomeActivity : ComponentActivity() {
 
         val user = SupabaseConfig.client.auth.currentUserOrNull()
         val username = user?.userMetadata?.get("username")?.jsonPrimitive?.content ?: "User"
+        
+        // Schedule notifications for all products when home starts
+        user?.id?.let { userId ->
+            lifecycleScope.launch {
+                val products = ProductHandler.getProducts(userId)
+                products.forEach { product ->
+                    NotificationHandler.scheduleExpirationNotification(this@HomeActivity, product.name, product.expiration_date)
+                }
+            }
+        }
 
         // Schedule notifications for all products when home starts
         user?.id?.let { userId ->

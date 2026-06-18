@@ -10,6 +10,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.http.HttpHeaders
 import io.ktor.http.headers
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
 import kotlin.io.encoding.Base64
 
@@ -37,21 +38,29 @@ object OpenFoodFactsHandler {
     private val SEARCH_URL = BuildConfig.OPENFOODFACTS_SEARCH_URL + "?search_simple=1&json=1&page_size=20&search_terms="
 
     suspend fun getProductById(productId: String) : OpenFoodFactsProductResult? {
-        try {
-            val response = HttpRequestHandler.get("${PRODUCT_URL}${productId}.json?fields=product_type,product_name,brands,packagings,image_url,ingredients", httpClient)
+        val retries = 3
 
-            if (response.status.value !in 200..299) {
-                //Response is invalid
-                throw Exception(response.status.toString())
+        for (attempt in 0..retries) {
+            try {
+                val response = HttpRequestHandler.get("${PRODUCT_URL}${productId}.json?fields=product_type,product_name,brands,packagings,image_url,ingredients", httpClient)
+
+                if (response.status.value !in 200..299) {
+                    //Response is invalid
+                    throw Exception(response.status.toString())
+                }
+
+                val productResult: OpenFoodFactsProductResult = response.body()
+                return productResult
+            } catch (e: Exception) {
+                Log.e("Food Fetch Error: ", "Attempt ${attempt + 1} failed: ${e.message}")
+                if (attempt == retries) {
+                    return null
+                }
+                delay(3000)
             }
-
-            val productResult: OpenFoodFactsProductResult = response.body()
-            
-            return productResult
-        } catch (e: Exception) {
-            Log.e("Food Fetch Error: ", e.toString())
-            return null
         }
+
+        return null
     }
 
     suspend fun getSearchResultsByName(searchValue: String) : OpenFoodFactsSearchResult? {
