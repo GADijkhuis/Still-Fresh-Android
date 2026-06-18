@@ -65,6 +65,9 @@ class MainActivity : ComponentActivity() {
         NotificationHandler.createNotificationChannel(this)
         checkNotificationPermission()
 
+        NotificationHandler.createNotificationChannel(this)
+        checkNotificationPermission()
+
         // Check for existing session before showing login screen
         lifecycleScope.launch {
             val status = SupabaseConfig.client.auth.sessionStatus

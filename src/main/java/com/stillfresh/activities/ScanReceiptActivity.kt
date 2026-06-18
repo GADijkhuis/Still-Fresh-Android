@@ -326,6 +326,11 @@ fun ScanReceiptScreen(
                                         )
                                         Spacer(modifier = Modifier.width(12.dp))
                                     }
+                                    Text(
+                                        text = "Exp: ${product.expirationDate}",
+                                        fontSize = 12.sp,
+                                        color = Color.Gray
+                                    )
                                     if (!product.isFood) {
                                         Text(
                                             text = "Not food",

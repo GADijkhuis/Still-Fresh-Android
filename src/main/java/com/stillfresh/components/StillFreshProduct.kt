@@ -45,8 +45,8 @@ fun StillFreshProduct(
             if (product.image_url != null) {
                 AsyncImage(
                     modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .height(60.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .height(60.dp)
                         .width(60.dp),
                     model = product.image_url,
                     contentDescription = productName,

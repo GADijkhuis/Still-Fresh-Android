@@ -22,7 +22,7 @@ class NotificationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val title = intent.getStringExtra("title") ?: "Product Expiring"
         val body = intent.getStringExtra("body") ?: "One of your products is expiring tomorrow!"
-        
+
         NotificationHandler.showNotification(context, title, body)
     }
 }
@@ -109,7 +109,7 @@ object NotificationHandler {
         try {
             val expiry = LocalDate.parse(expirationDate)
             val notificationDate = expiry.minusDays(1)
-            
+
             // If it's already past the notification date, don't schedule
             if (notificationDate.isBefore(LocalDate.now())) return
 
