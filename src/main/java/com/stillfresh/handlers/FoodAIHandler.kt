@@ -293,6 +293,7 @@ Respond ONLY like this (no other text, no explanation):
             lower.contains("champignon") || lower.contains("mushroom") -> 5
             lower.contains("courgette") || lower.contains("broccoli") || lower.contains("bloemkool") -> 7
             lower.contains("spinazie") || lower.contains("prei") -> 7
+            lower.contains("mango") || lower.contains("papaya") -> 7
             lower.contains("sap") || lower.contains("juice") -> 7
             lower.contains("cola") || lower.contains("fris") || lower.contains("soda") -> 180
             lower.contains("chips") -> 150
