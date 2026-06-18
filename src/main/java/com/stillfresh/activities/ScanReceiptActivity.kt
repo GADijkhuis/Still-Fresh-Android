@@ -141,7 +141,6 @@ class ScanReceiptActivity : ComponentActivity() {
                         checkedProducts = checkedProducts + new.name
                     },
                     onConfirm = {
-                        val selected = products.filter { checkedProducts.contains(it.name) }
                         // Only save food items that are checked
                         val selected = products.filter { checkedProducts.contains(it.name) && it.isFood }
                         lifecycleScope.launch {

@@ -9,14 +9,6 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Build
-import android.util.Log
-import androidx.core.app.NotificationCompat
-import com.stillfresh.R
-import com.stillfresh.activities.MainActivity
-import java.time.LocalDate
-import java.time.ZoneId
-import java.util.Calendar
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
@@ -30,15 +22,12 @@ class NotificationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val title = intent.getStringExtra("title") ?: "Product Expiring"
         val body = intent.getStringExtra("body") ?: "One of your products is expiring tomorrow!"
-        
+
         NotificationHandler.showNotification(context, title, body)
     }
 }
 
 object NotificationHandler {
-    private const val CHANNEL_ID = "expiration_alerts"
-    private const val CHANNEL_NAME = "Product Expiration Alerts"
-    
     private const val TAG = "NotificationHandler"
     private const val CHANNEL_ID = "expiration_alerts"
     private const val CHANNEL_NAME = "Product Expiration Alerts"
@@ -73,7 +62,6 @@ object NotificationHandler {
         )
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info) // Placeholder icon
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(title)
             .setContentText(body)
@@ -121,7 +109,7 @@ object NotificationHandler {
         try {
             val expiry = LocalDate.parse(expirationDate)
             val notificationDate = expiry.minusDays(1)
-            
+
             // If it's already past the notification date, don't schedule
             if (notificationDate.isBefore(LocalDate.now())) return
 
@@ -130,10 +118,6 @@ object NotificationHandler {
                 putExtra("title", "Expiration Alert")
                 putExtra("body", "$productName is expiring tomorrow!")
             }
-            
-            val pendingIntent = PendingIntent.getBroadcast(
-                context,
-                productName.hashCode(), // Use hashcode as unique request code for this product
 
             val pendingIntent = PendingIntent.getBroadcast(
                 context,
@@ -142,31 +126,6 @@ object NotificationHandler {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
-            // Set for 9:00 AM on the notification date
-            val calendar = Calendar.getInstance().apply {
-                timeInMillis = System.currentTimeMillis()
-                set(notificationDate.year, notificationDate.monthValue - 1, notificationDate.dayOfMonth, 9, 0, 0)
-            }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    pendingIntent
-                )
-            } else {
-                alarmManager.setExact(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    pendingIntent
-                )
-            }
-            
-            Log.d("NotificationHandler", "Scheduled notification for $productName on $notificationDate")
-        } catch (e: Exception) {
-            Log.e("NotificationHandler", "Error scheduling notification: ${e.message}")
-        }
-    }
             val calendar = java.util.Calendar.getInstance().apply {
                 timeInMillis = System.currentTimeMillis()
                 set(notificationDate.year, notificationDate.monthValue - 1, notificationDate.dayOfMonth, NOTIFICATION_HOUR, 0, 0)
