@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config>
+        <domain includeSubdomains="true">world.openfoodfacts.org</domain>
+        <pin-set expiration="2026-07-21">
+            <pin digest="SHA-256">PIN</pin>
+            <!--Tool for getting SHA-256 pins: https://approov.io/tools/static-pinning/-->
+        </pin-set>
+    </domain-config>
+    <domain-config>
+        <domain includeSubdomains="true">ugyfynfueyvpspfngyyc.supabase.co</domain>
+        <pin-set expiration="2026-07-29">
+            <pin digest="SHA-256">PIN</pin>
+            <!--Tool for getting SHA-256 pins: https://approov.io/tools/static-pinning/-->
+        </pin-set>
+    </domain-config>
+    <domain-config>
+        <domain includeSubdomains="true">openrouter.ai</domain>
+        <pin-set expiration="2026-09-21">
+            <pin digest="SHA-256">PIN</pin>
+            <!--Tool for getting SHA-256 pins: https://approov.io/tools/static-pinning/-->
+        </pin-set>
+    </domain-config>
+    <domain-config>
+        <domain includeSubdomains="true">generativelanguage.googleapis.com</domain>
+        <pin-set expiration="2026-08-31">
+            <pin digest="SHA-256">PIN</pin>
+            <!--Tool for getting SHA-256 pins: https://approov.io/tools/static-pinning/-->
+        </pin-set>
+    </domain-config>
+</network-security-config>
