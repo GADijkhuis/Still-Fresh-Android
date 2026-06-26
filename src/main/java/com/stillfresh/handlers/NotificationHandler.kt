@@ -49,7 +49,6 @@ object NotificationHandler {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.w(TAG, "Notification skipped because POST_NOTIFICATIONS is not granted")
             return
         }
 
@@ -85,7 +84,6 @@ object NotificationHandler {
             } else {
                 alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
             }
-            Log.w(TAG, "Exact alarms unavailable, scheduled inexact alarm instead")
             return
         }
 
@@ -134,33 +132,11 @@ object NotificationHandler {
             var triggerAtMillis = calendar.timeInMillis
             if (triggerAtMillis <= System.currentTimeMillis()) {
                 triggerAtMillis = System.currentTimeMillis() + 10_000L
-                Log.w(TAG, "Notification time already passed, scheduling fallback in 10 seconds for $productName")
             }
 
             scheduleAlarm(alarmManager, triggerAtMillis, pendingIntent)
-            Log.d(TAG, "Scheduled notification for $productName on $notificationDate")
         } catch (e: Exception) {
-            Log.e(TAG, "Error scheduling notification: ${e.message}")
+            //ignored
         }
-    }
-
-    @SuppressLint("ScheduleExactAlarm")
-    fun scheduleDebugTestNotification(context: Context, delaySeconds: Long = 10L) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val triggerAtMillis = System.currentTimeMillis() + (delaySeconds.coerceAtLeast(1L) * 1000L)
-        val intent = Intent(context, NotificationReceiver::class.java).apply {
-            putExtra("title", "StillFresh test")
-            putExtra("body", "Test notification delivered successfully.")
-        }
-
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            DEBUG_NOTIFICATION_REQUEST_CODE,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        scheduleAlarm(alarmManager, triggerAtMillis, pendingIntent)
-        Log.d(TAG, "Scheduled debug test notification in ${delaySeconds.coerceAtLeast(1L)} seconds")
     }
 }

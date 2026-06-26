@@ -54,7 +54,7 @@ class SignUpActivity : ComponentActivity() {
                                     finish()
                                 },
                                 onFailure = { error ->
-                                    Toast.makeText(this@SignUpActivity, error.message ?: "Sign up failed", Toast.LENGTH_LONG).show()
+                                    Toast.makeText(this@SignUpActivity, "Sign up failed", Toast.LENGTH_LONG).show()
                                 }
                             )
                         }

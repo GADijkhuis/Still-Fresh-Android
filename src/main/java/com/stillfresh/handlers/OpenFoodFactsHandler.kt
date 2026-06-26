@@ -52,7 +52,6 @@ object OpenFoodFactsHandler {
                 val productResult: OpenFoodFactsProductResult = response.body()
                 return productResult
             } catch (e: Exception) {
-                Log.e("Food Fetch Error: ", "Attempt ${attempt + 1} failed: ${e.message}")
                 if (attempt == retries) {
                     return null
                 }
@@ -74,11 +73,8 @@ object OpenFoodFactsHandler {
 
             val searchResult: OpenFoodFactsSearchResult = response.body()
 
-            Log.i("Fetched products", response.body())
-
             return searchResult
         } catch (e: Exception) {
-            Log.e("Food Fetch Error: ", e.toString())
             return null
         }
     }
