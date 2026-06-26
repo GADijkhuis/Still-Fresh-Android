@@ -165,7 +165,7 @@ object SearchActivity : ViewModel() {
                                             NotificationHandler.scheduleExpirationNotification(context, productToSave.name, productToSave.expiration_date)
                                             Toast.makeText(context, "$name added to inventory", Toast.LENGTH_SHORT).show()
                                         } catch (e: Exception) {
-                                            Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                                            Toast.makeText(context, "An unexpected error occurred", Toast.LENGTH_LONG).show()
                                         }
                                     }
                                 }

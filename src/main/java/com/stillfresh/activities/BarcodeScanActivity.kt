@@ -200,7 +200,7 @@ fun BarcodeScanScreen(
                             imageAnalyzer
                         )
                     } catch (e: Exception) {
-                        Log.e("BarcodeScan", "Camera binding failed", e)
+                        //ignored
                     }
                 }, ContextCompat.getMainExecutor(ctx))
 

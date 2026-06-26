@@ -83,7 +83,7 @@ class ManualEntryActivity : ComponentActivity() {
                                 Toast.makeText(this@ManualEntryActivity, "${products.size} products added", Toast.LENGTH_SHORT).show()
                                 finish()
                             } catch (e: Exception) {
-                                Toast.makeText(this@ManualEntryActivity, "Error saving products: ${e.message}", Toast.LENGTH_LONG).show()
+                                Toast.makeText(this@ManualEntryActivity, "An unexpected error occurred", Toast.LENGTH_LONG).show()
                             }
                         }
                     },

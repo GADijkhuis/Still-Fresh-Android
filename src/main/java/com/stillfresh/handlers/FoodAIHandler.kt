@@ -103,7 +103,6 @@ Respond ONLY like this (no other text, no explanation):
         val geminiResult = tryGemini(prompt, items)
         if (geminiResult != null) return geminiResult
 
-        Log.w("FoodAI", "All AI providers failed, using fallback")
         return fallbackClassification(items)
     }
 

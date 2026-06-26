@@ -30,7 +30,7 @@ object AuthRepository {
                 }
             }
 
-            val userId = authResult?.id ?: throw Exception("Auth registratie mislukt of ID is null")
+            val userId = authResult?.id ?: throw Exception("An error occurred during sign up.")
 
             val userData = mapOf(
                 "id" to userId,
@@ -55,7 +55,7 @@ object AuthRepository {
                 .decodeSingleOrNull<Map<String, String>>()
 
             val userSalt = userRow?.get("password_salt")
-                ?: throw Exception("Gebruiker niet")
+                ?: throw Exception("An error occured retrieving user information.")
 
             val customHashedPassword = CryptoHelper.hashPassword(password, userSalt)
 
